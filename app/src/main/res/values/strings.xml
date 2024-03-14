@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Past Weather</string>
+    <string name="button_back">Back</string>
+    <string name="label_today">Today in</string>
+    <string name="label_high_temp">High temp</string>
+    <string name="label_low_temp">Low temp</string>
+    <string name="temp_char">℃</string>
+    <string name="title_location">Location</string>
+    <string name="button_change">Change</string>
+    <string name="text_boot">Checking for updates</string>
+    <string name="text_update">Get the latest information</string>
+    <string name="text_download">Get weather data</string>
+    <string name="text_updated">Weather data updated</string>
+    <string name="button_setting">Setting</string>
+    <string name="text_setting">Setting database</string>
+    <string name="button_download">Download</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="text_cancel_download">Canceled download</string>
+    <string name="text_success_download">Success download</string>
+    <string name="button_delete_data">Delete location data</string>
+    <string name="tag_finder">Finder</string>
+    <string name="tag_graph">Graph</string>
+    <string name="tag_average">Average</string>
+    <string name="button_point">Select point</string>
+    <string name="label_getting">getting location</string>
+    <string name="label_other">other location</string>
+    <string name="text_ask_download_f">"Do download "</string>
+    <string name="text_ask_download_r">" data?"</string>
+    <string name="button_info">Info</string>
+    <string name="error_browse">not connect internet</string>
+    <string name="homepage_url">https://dullbluelab.nobushi.jp/index.html</string>
+</resources>

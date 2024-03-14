@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Past Weather</string>
+    <string name="button_back">戻る</string>
+    <string name="label_today">Today in</string>
+    <string name="label_high_temp">最高気温</string>
+    <string name="label_low_temp">最低気温</string>
+    <string name="temp_char">℃</string>
+    <string name="title_location">Location</string>
+    <string name="button_change">変更</string>
+    <string name="text_boot">最新情報をチェックしています</string>
+    <string name="text_update">最新情報を取得しています</string>
+    <string name="text_download">気象データを取得しています</string>
+    <string name="text_updated">気象データを更新しました</string>
+    <string name="text_setting">データを設定しています</string>
+    <string name="button_setting">設定</string>
+    <string name="button_download">ダウンロード</string>
+    <string name="button_cancel">キャンセル</string>
+    <string name="text_cancel_download">ダウンロードをキャンセルしました</string>
+    <string name="text_success_download">ダウンロード出来ました</string>
+    <string name="button_delete_data">指定地点のデータを削除しました</string>
+    <string name="tag_finder">Finder</string>
+    <string name="tag_graph">Graph</string>
+    <string name="tag_average">Average</string>
+    <string name="button_point">地点選択</string>
+    <string name="label_getting">気象データを取得した地点</string>
+    <string name="label_other">その他の地点</string>
+    <string name="text_ask_download_f">""</string>
+    <string name="text_ask_download_r">"の気象データを取得しますか？"</string>
+    <string name="button_info">インフォメーション</string>
+    <string name="error_browse">インターネットにアクセス出来ませんでした</string>
+    <string name="homepage_url">https://dullbluelab.nobushi.jp/index.html</string>
+</resources>

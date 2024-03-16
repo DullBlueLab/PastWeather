@@ -440,8 +440,13 @@ class PastWeatherViewModel(
     // WeatherScreen
 
     fun changeMode(mode: String) {
-        if (mode == "graph") {
-            updateGraphData()
+        when (mode) {
+            "graph" -> {
+                updateGraphData()
+            }
+            "average" -> {
+                updateAverage()
+            }
         }
         _rootUi.update { state ->
             state.copy(
@@ -499,25 +504,29 @@ class PastWeatherViewModel(
         }
     }
 
-    fun updateAverage() {
+    private fun updateAverage() {
         val month = today.monthValue
         val day = today.dayOfMonth
 
         val scope = CoroutineScope(Job() + Dispatchers.Default)
         scope.launch {
-            val pointCode = preferencesData.selectPoint
-            val stream = weatherRepository.getAverageStream(pointCode, month, day)
+            try {
+                val pointCode = preferencesData.selectPoint
+                val stream = weatherRepository.getAverageStream(pointCode, month, day)
 
-            stream.collect { list ->
-                if (list.isNotEmpty()) {
-                    val sorted = list.sortedBy { it.years }
-                    val start = sorted[0].years
-                    val end = sorted[sorted.size - 1].years
-                    updateAverageUi(sorted, start, end, month, day)
+                stream.collect { list ->
+                    if (list.isNotEmpty()) {
+                        val sorted = list.sortedBy { it.years }
+                        val start = sorted[0].years
+                        val end = sorted[sorted.size - 1].years
+                        updateAverageUi(sorted, start, end, month, day)
+                    }
+                    cancel()
                 }
-                cancel()
             }
-
+            catch (e: Exception) {
+                e.message?.let { Log.e(TAG, it) }
+            }
         }
     }
 

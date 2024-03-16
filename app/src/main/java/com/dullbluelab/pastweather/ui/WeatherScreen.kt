@@ -60,7 +60,6 @@ fun WeatherScreen(
                 onClickFinder = { viewModel.changeMode("finder") },
                 onClickGraph = { viewModel.changeMode("graph") },
                 onClickAverage = {
-                    viewModel.updateAverage()
                     viewModel.changeMode("average")
                                  },
                 Modifier

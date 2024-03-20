@@ -128,8 +128,6 @@ class PastWeatherViewModel(
     private var downloadItem: LocationTable? = null
     private var downloadCancelFlag: Boolean = false
 
-    var destinationListener: DestinationListener? = null
-
     private var today: LocalDate = LocalDate.now()
 
     companion object {

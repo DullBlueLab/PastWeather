@@ -59,7 +59,7 @@ fun LocationScreen(
             modifier = Modifier.padding(8.dp)
         )
         Spacer(
-            modifier = Modifier.size(96.dp)
+            modifier = Modifier.size(48.dp)
         )
         Text(
             text = stringResource(id = R.string.label_other),

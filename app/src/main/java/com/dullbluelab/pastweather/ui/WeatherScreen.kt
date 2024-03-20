@@ -1,7 +1,9 @@
 package com.dullbluelab.pastweather.ui
 
+import android.os.Build
 import android.widget.NumberPicker
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,8 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
@@ -211,17 +217,20 @@ private fun FinderPanel(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 private fun FindYearPicker(
     uiState: PastWeatherViewModel.FinderUiState,
     changeValue: (Int) -> Unit
 ) {
+    val color = MaterialTheme.colorScheme.primary.toArgb()
     AndroidView(
         factory = { context ->
             NumberPicker(context).apply {
                 value = uiState.selectYear
                 maxValue = uiState.maxYear
                 minValue = uiState.minYear
+                textColor = color
                 setOnValueChangedListener { _, _, newValue ->
                     changeValue(newValue)
                 }
@@ -293,6 +302,7 @@ private fun GraphCanvas(
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
+    val textStyle = TextStyle(color = MaterialTheme.colorScheme.secondary)
 
     Canvas(
         modifier = modifier
@@ -318,8 +328,10 @@ private fun GraphCanvas(
             strokeWidth = 1f
         )
         drawText(
-            textMeasurer, "40℃",
-            topLeft = Offset(0f, pointY)
+            textMeasurer = textMeasurer,
+            text = "40℃",
+            topLeft = Offset(0f, pointY),
+            style = textStyle,
         )
         pointY = scale.pointY(0f)
         drawLine(
@@ -330,6 +342,7 @@ private fun GraphCanvas(
         )
         drawText(
             textMeasurer, "0℃",
+            style = textStyle,
             topLeft = Offset(0f, pointY)
         )
         pointY = scale.pointY(20f)
@@ -341,6 +354,7 @@ private fun GraphCanvas(
         )
         drawText(
             textMeasurer, "20℃",
+            style = textStyle,
             topLeft = Offset(0f, pointY)
         )
         pointY = scale.pointY(-20f)
@@ -352,6 +366,7 @@ private fun GraphCanvas(
         )
         drawText(
             textMeasurer, "-20℃",
+            style = textStyle,
             topLeft = Offset(0f, pointY)
         )
 

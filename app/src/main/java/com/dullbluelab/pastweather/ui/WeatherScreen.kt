@@ -31,7 +31,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
@@ -39,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.dullbluelab.pastweather.R
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun WeatherScreen(
     onChangeYear: (Int) -> Unit,
@@ -140,6 +140,7 @@ fun StartupPanel(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 private fun FinderPanel(
     viewModel: PastWeatherViewModel,
@@ -224,6 +225,8 @@ private fun FindYearPicker(
     changeValue: (Int) -> Unit
 ) {
     val color = MaterialTheme.colorScheme.primary.toArgb()
+    val text = stringResource(id = R.string.item_year_picker)
+
     AndroidView(
         factory = { context ->
             NumberPicker(context).apply {
@@ -234,6 +237,7 @@ private fun FindYearPicker(
                 setOnValueChangedListener { _, _, newValue ->
                     changeValue(newValue)
                 }
+                contentDescription = text
             }
         },
         update = { view ->

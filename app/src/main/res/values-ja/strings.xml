@@ -29,4 +29,5 @@
     <string name="button_info">インフォメーション</string>
     <string name="error_browse">インターネットにアクセス出来ませんでした</string>
     <string name="homepage_url">https://dullbluelab.nobushi.jp/index.html</string>
+    <string name="item_year_picker">検索する年を選択</string>
 </resources>

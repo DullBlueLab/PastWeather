@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.dullbluelab.pastweather.PastWeatherApplication
 import com.dullbluelab.pastweather.data.AverageWeatherTable
+import com.dullbluelab.pastweather.data.DailyWeatherTable
 import com.dullbluelab.pastweather.data.DirectoryJson
 import com.dullbluelab.pastweather.data.LocationTable
 import com.dullbluelab.pastweather.data.UserPreferencesData
@@ -127,6 +128,7 @@ class PastWeatherViewModel(
     var selectLocationItem: LocationTable? = null
     private var downloadItem: LocationTable? = null
     private var downloadCancelFlag: Boolean = false
+    private var graphList: MutableList<GraphTempItem> = mutableListOf()
 
     private var today: LocalDate = LocalDate.now()
 
@@ -219,18 +221,29 @@ class PastWeatherViewModel(
         }
     }
 
+    private fun updateFinderUi(table: DailyWeatherTable) {
+        _finderUi.update { state ->
+            state.copy(
+                selectYear = table.year,
+                selectMonth = table.month,
+                selectDay = table.day,
+                highTemp = table.high,
+                lowTemp = table.low,
+                sky = table.sky
+            )
+        }
+    }
+
     //
     // GraphUi
 
     private fun updateGraphUi(month: Int, day: Int, list: List<GraphTempItem>) {
-        viewModelScope.launch {
-            _graphUi.update { state ->
-                state.copy(
-                    selectMonth = month,
-                    selectDay = day,
-                    tempList = list
-                )
-            }
+        _graphUi.update { state ->
+            state.copy(
+                selectMonth = month,
+                selectDay = day,
+                tempList = list
+            )
         }
     }
 
@@ -414,16 +427,8 @@ class PastWeatherViewModel(
                         point, year, today.monthValue, today.dayOfMonth
                     )
                     stream.collect { table ->
-                        if (table == null) throw Exception("not match weather data")
-                        _finderUi.update { state ->
-                            state.copy(
-                                selectYear = table.year,
-                                selectMonth = table.month,
-                                selectDay = table.day,
-                                highTemp = table.high,
-                                lowTemp = table.low,
-                                sky = table.sky
-                            )
+                        table?.let {
+                            updateFinderUi(it)
                         }
                         cancel()
                     }
@@ -454,7 +459,6 @@ class PastWeatherViewModel(
     }
 
     private fun updateGraphData() {
-        val list = mutableListOf<GraphTempItem>()
         val point = preferencesData.selectPoint
         val min = preferencesData.minYear
         val max = preferencesData.maxYear
@@ -462,19 +466,20 @@ class PastWeatherViewModel(
         val month = today.monthValue
         val day = today.dayOfMonth
         var count = 0
+        graphList = mutableListOf()
 
         for (year in min..max) {
-            val scope = CoroutineScope(Job() + Dispatchers.IO)
+            val scope = CoroutineScope(Job() + Dispatchers.Default)
             scope.launch {
                 try {
                     val stream = weatherRepository.getTableStream(point, year, month, day)
                     stream.collect { table ->
                         table?.let {
-                            appendGraphItem(list, GraphTempItem(year, "", it.high, it.low))
+                            appendGraphItem(graphList, GraphTempItem(year, "", it.high, it.low))
                         }
                         count ++
                         if (count >= size) {
-                            updateGraphUi(month, day, list.toList())
+                            updateGraphUi(month, day, graphList.toList())
                         }
                         cancel()
                     }
@@ -489,14 +494,15 @@ class PastWeatherViewModel(
     private fun appendGraphItem(list: MutableList<GraphTempItem>, item: GraphTempItem) {
         var count = 0
         while (count < list.size) {
-            if (list[count].year > item.year) break
+            if (list[count].year == item.year) return
+            else if (list[count].year > item.year) break
             count ++
         }
-        list.add(count, item)
+        if (count < list.size) list.add(count, item) else list.add(item)
     }
 
     fun changeYear(year: Int) {
-        val scope = CoroutineScope(Job() + Dispatchers.IO)
+        val scope = CoroutineScope(Job() + Dispatchers.Default)
         scope.launch {
             preferences.saveYear(year)
         }

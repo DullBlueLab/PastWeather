@@ -1,8 +1,10 @@
 package com.dullbluelab.pastweather.ui
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,6 +46,7 @@ enum class PastWeatherScreen {
     Weather, Info, Location, Download
 }
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PastWeatherApp(
@@ -214,7 +217,7 @@ fun  AdmobBanner(
                 // 現在追加されているテスト広告ユニット ID。
                 setAdSize(AdSize.BANNER)
                 adUnitId = "ca-app-pub-3940256099942544/9214589741" // test
-                // adUnitId = "ca-app-pub-5155739412996974~8685209534"
+                // adUnitId = "ca-app-pub-5155739412996974/5785915157"
                 // 呼び出し広告を読み込んで広告を読み込みます。
                 loadAd(AdRequest.Builder().build())
             }

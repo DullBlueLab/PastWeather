@@ -29,4 +29,5 @@
     <string name="button_info">Info</string>
     <string name="error_browse">not connect internet</string>
     <string name="homepage_url">https://dullbluelab.nobushi.jp/index.html</string>
+    <string name="item_year_picker">Number picker of year</string>
 </resources>

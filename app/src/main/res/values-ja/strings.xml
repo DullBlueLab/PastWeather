@@ -17,7 +17,7 @@
     <string name="button_cancel">キャンセル</string>
     <string name="text_cancel_download">ダウンロードをキャンセルしました</string>
     <string name="text_success_download">ダウンロード出来ました</string>
-    <string name="button_delete_data">指定地点のデータを削除しました</string>
+    <string name="button_delete_data">指定地点のデータを削除します</string>
     <string name="tag_finder">Finder</string>
     <string name="tag_graph">Graph</string>
     <string name="tag_average">Average</string>

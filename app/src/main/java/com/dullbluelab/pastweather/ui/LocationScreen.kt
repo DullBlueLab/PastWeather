@@ -104,6 +104,8 @@ private fun EntryLocationList(
             .fillMaxWidth()
     ) {
         locationUi.entryList.forEach { item ->
+            val textDelete = "${stringResource(id = R.string.button_delete_data)} ${item.name}"
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -130,7 +132,7 @@ private fun EntryLocationList(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
-                            contentDescription = stringResource(id = R.string.button_delete_data)
+                            contentDescription = textDelete
                         )
                     }
                 }

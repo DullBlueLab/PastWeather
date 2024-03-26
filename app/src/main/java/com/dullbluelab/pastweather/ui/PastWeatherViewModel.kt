@@ -313,6 +313,8 @@ class PastWeatherViewModel(
                         else {
                             updateStartupUi("start")
                             updateRootUi("finder")
+                            updateGraphData()
+                            updateAverage()
                         }
                         cancel()
                     }
@@ -348,6 +350,8 @@ class PastWeatherViewModel(
                         updateStartupUi("start")
                         updateRootUi("finder")
                         updateWeather()
+                        updateGraphData()
+                        updateAverage()
                     }
                 )
             }
@@ -386,7 +390,11 @@ class PastWeatherViewModel(
                     currentYear = item.selectYear
                     updateFlag = true
                 }
-                if (updateFlag) updateWeather()
+                if (updateFlag) {
+                    updateWeather()
+                    updateGraphData()
+                    updateAverage()
+                }
             }
         }
         chainLocationListStream()

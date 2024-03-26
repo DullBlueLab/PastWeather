@@ -1,42 +1,54 @@
 package com.dullbluelab.pastweather.ui
 
 import android.os.Build
-import android.widget.NumberPicker
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.dullbluelab.pastweather.R
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
@@ -51,55 +63,44 @@ fun WeatherScreen(
     if (rootUi.mode == "startup") {
         StartupPanel(
             viewModel = viewModel,
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
         )
     }
     else {
-        Column(
-            verticalArrangement = Arrangement.SpaceBetween,
-            modifier = modifier
-                .fillMaxSize()
-        ) {
-            ContentsSelectBar(
-                onClickFinder = { viewModel.changeMode("finder") },
-                onClickGraph = { viewModel.changeMode("graph") },
-                onClickAverage = {
-                    viewModel.changeMode("average")
-                                 },
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            )
-            when (rootUi.mode) {
-               "graph" -> {
-                    GraphPanel(
-                        viewModel = viewModel,
-                        modifier = Modifier
-                            .weight(8f)
-                            .fillMaxWidth()
-                    )
-                }
-                "finder" -> {
+        TagPager(
+            tagList = listOf(
+                stringResource(id = R.string.tag_finder),
+                stringResource(id = R.string.tag_graph),
+                stringResource(id = R.string.tag_average)
+            ),
+            pageList = listOf(
+                {
                     FinderPanel(
                         viewModel = viewModel,
                         onChangeYear = onChangeYear,
                         onChangeLocation = onChangeLocation,
                         modifier = Modifier
-                            .weight(8f)
-                            .fillMaxWidth()
+                            .fillMaxSize()
                     )
-                }
-                "average" -> {
+                },
+                {
+                    GraphPanel(
+                        viewModel = viewModel,
+                        modifier = Modifier
+                            .fillMaxSize()
+                    )
+                },
+                {
                     AveragePanel(
                         viewModel = viewModel,
                         modifier = Modifier
-                            .weight(8f)
-                            .fillMaxWidth()
+                            .fillMaxSize()
                     )
                 }
-            }
-        }
+            ),
+            modifier = modifier.fillMaxSize()
+        )
     }
 }
 
@@ -218,6 +219,7 @@ private fun FinderPanel(
     }
 }
 
+/*
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 private fun FindYearPicker(
@@ -245,29 +247,24 @@ private fun FindYearPicker(
         }
     )
 }
+ */
 
 @Composable
-private fun ContentsSelectBar(
-    onClickFinder: () -> Unit,
-    onClickGraph: () -> Unit,
-    onClickAverage: () -> Unit,
-    modifier: Modifier = Modifier
+private fun FindYearPicker(
+    uiState: PastWeatherViewModel.FinderUiState,
+    changeValue: (Int) -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        modifier = modifier
-    ) {
-        TextButton(onClick = onClickFinder) {
-            Text(text = stringResource(id = R.string.tag_finder))
+    val color = MaterialTheme.colorScheme.primary
+
+    NumberCounter(
+        value = uiState.selectYear,
+        maxValue = uiState.maxYear,
+        minValue = uiState.minYear,
+        textColor = color,
+        onValueChangedListener =  { newValue ->
+            changeValue(newValue)
         }
-        TextButton(onClick = onClickGraph) {
-            Text(text = stringResource(id = R.string.tag_graph))
-        }
-        TextButton(onClick = onClickAverage) {
-            Text(text = stringResource(id = R.string.tag_average))
-        }
-    }
+    )
 }
 
 @Composable
@@ -443,6 +440,7 @@ private fun AveragePanel(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
+            .verticalScroll(rememberScrollState())
     ) {
         Text(
             text = averageUi.pointName,
@@ -458,13 +456,12 @@ private fun AveragePanel(
             GraphCanvas(
                 tempList = averageUi.tempList,
                 modifier = Modifier
-                    .weight(2f)
+                    .height(400.dp)
                     .fillMaxWidth()
             )
             AverageList(
                 tempList = averageUi.tempList,
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
             )
         }
@@ -475,16 +472,12 @@ private fun AveragePanel(
 private fun AverageList(
     tempList: List<PastWeatherViewModel.GraphTempItem>,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = contentPadding
+    Column(
+        modifier = modifier
+            .padding(8.dp),
     ) {
-        items(
-            items = tempList,
-            key = { tempItem -> tempItem.years }
-        ) { item ->
+        for (item in tempList) {
             Row(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically,
@@ -503,5 +496,106 @@ private fun AverageList(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun TagPager(
+    tagList: List<String>,
+    pageList: List<@Composable () -> Unit>,
+    modifier: Modifier = Modifier
+) {
+    val pagerState = rememberPagerState(pageCount = { pageList.size })
+    var position by remember { mutableIntStateOf(0) }
+    val scope = rememberCoroutineScope()
+
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        TabRow(
+            selectedTabIndex = pagerState.currentPage,
+            modifier = Modifier
+                .height(64.dp)
+                .fillMaxWidth()
+        ) {
+            tagList.forEachIndexed { cnt, tag ->
+                Tab(
+                    selected = cnt == position,
+                    onClick = {
+                        scope.launch {
+                            position = cnt
+                            pagerState.animateScrollToPage(cnt)
+                        }
+                    },
+                    text = { Text(text = tag) }
+                )
+            }
+        }
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) { page ->
+            pageList[page]()
+        }
+    }
+}
+
+@Composable
+fun NumberCounter(
+    value: Int,
+    maxValue: Int,
+    minValue: Int,
+    textColor: Color,
+    fontSize: TextUnit = 24.sp,
+    modifier: Modifier = Modifier,
+    onValueChangedListener: (Int) -> Unit,
+) {
+    var count by remember { mutableIntStateOf(value - minValue) }
+    val limit = maxValue - minValue
+    val lastModifier = Modifier.size(96.dp, 144.dp).padding(8.dp, 16.dp).then(modifier)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = lastModifier
+    ) {
+        IconButton(
+            onClick = {
+                if (count > 0) {
+                    count --
+                    onValueChangedListener(minValue + count)
+                }
+            },
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowUp,
+                contentDescription = "count down"
+            )
+        }
+        Text(
+            text = "${minValue + count}",
+            color = textColor,
+            fontSize = fontSize,
+            modifier = Modifier.weight(1f)
+        )
+        IconButton(
+            onClick = {
+                if (count < limit) {
+                    count ++
+                    onValueChangedListener(minValue + count)
+                }
+            },
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowDown,
+                contentDescription = "count up"
+            )
+        }
+
     }
 }

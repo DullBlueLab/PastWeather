@@ -44,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -556,9 +557,10 @@ fun NumberCounter(
 ) {
     var count by remember { mutableIntStateOf(value - minValue) }
     val limit = maxValue - minValue
-    val lastModifier = Modifier.size(96.dp, 144.dp).padding(8.dp, 16.dp).then(modifier)
+    val lastModifier = Modifier.size(80.dp, 184.dp).padding(8.dp, 16.dp).then(modifier)
 
     Column(
+        verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = lastModifier
     ) {
@@ -569,18 +571,20 @@ fun NumberCounter(
                     onValueChangedListener(minValue + count)
                 }
             },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.size(52.dp)
         ) {
             Icon(
                 imageVector = Icons.Filled.KeyboardArrowUp,
-                contentDescription = "count down"
+                contentDescription = "count down",
+                modifier = Modifier.size(48.dp)
             )
         }
         Text(
             text = "${minValue + count}",
             color = textColor,
             fontSize = fontSize,
-            modifier = Modifier.weight(1f)
+            textAlign = TextAlign.Center,
+            modifier = Modifier
         )
         IconButton(
             onClick = {
@@ -589,11 +593,12 @@ fun NumberCounter(
                     onValueChangedListener(minValue + count)
                 }
             },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.size(52.dp)
         ) {
             Icon(
                 imageVector = Icons.Filled.KeyboardArrowDown,
-                contentDescription = "count up"
+                contentDescription = "count up",
+                modifier = Modifier.size(48.dp)
             )
         }
 

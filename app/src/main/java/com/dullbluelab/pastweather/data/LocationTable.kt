@@ -34,4 +34,7 @@ interface LocationListDao {
 
     @Query("SELECT * FROM location_table WHERE code = :code")
     fun getItem(code: String): Flow<LocationTable>
+
+    @Query("DELETE FROM location_table")
+    fun deleteAll()
 }

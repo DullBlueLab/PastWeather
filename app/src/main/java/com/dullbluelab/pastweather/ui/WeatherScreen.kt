@@ -1,7 +1,6 @@
 package com.dullbluelab.pastweather.ui
 
 import android.os.Build
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -39,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -48,25 +46,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dullbluelab.pastweather.MainActivity
 import com.dullbluelab.pastweather.R
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun WeatherScreen(
+    activity: MainActivity,
     onChangeYear: (Int) -> Unit,
-    onChangeLocation: () -> Unit,
+    onLocation: () -> Unit,
     viewModel: PastWeatherViewModel,
     modifier: Modifier = Modifier
 ) {
-    val rootUi by viewModel.rootUi.collectAsState()
+    val routeUi by viewModel.routeUi.collectAsState()
+    val finderUi by viewModel.finderUi.collectAsState()
 
-    if (rootUi.mode == "startup") {
-        StartupPanel(
-            viewModel = viewModel,
-            modifier = modifier
-                .fillMaxSize()
-        )
+    if (routeUi.mode == "start") {
+        if (finderUi.pointName == "") {
+            StartDownload(onLocation = onLocation)
+        }
+        else {
+            viewModel.updateMode("finder")
+        }
     }
     else {
         TagPager(
@@ -80,7 +82,7 @@ fun WeatherScreen(
                     FinderPanel(
                         viewModel = viewModel,
                         onChangeYear = onChangeYear,
-                        onChangeLocation = onChangeLocation,
+                        onChangeLocation = onLocation,
                         modifier = Modifier
                             .fillMaxSize()
                     )
@@ -102,43 +104,26 @@ fun WeatherScreen(
             ),
             modifier = modifier.fillMaxSize()
         )
+
     }
 }
 
+
 @Composable
-fun StartupPanel(
-    viewModel: PastWeatherViewModel,
+private fun StartDownload(
+    onLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val startupUi by viewModel.startupUi.collectAsState()
-
-    val message = when (startupUi.mode) {
-        "boot" -> stringResource(id = R.string.text_boot)
-        "update" -> stringResource(id = R.string.text_update)
-        "download" -> stringResource(id = R.string.text_download)
-        "setting" -> stringResource(id = R.string.text_setting)
-        "start" -> ""
-        "error" -> startupUi.message
-        else -> ""
-    }
-
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
+        modifier = modifier.fillMaxSize()
     ) {
-        Text(
-            text = message
-        )
-        if (startupUi.mode == "download" || startupUi.mode == "setting") {
-            Text(
-                text = "${startupUi.progressCount}%"
-            )
+        Button(
+            onClick = { onLocation() }
+        ) {
+            Text(text = stringResource(id = R.string.button_point))
         }
-    }
-    if (startupUi.mode == "error") {
-        Toast.makeText(LocalContext.current, message, Toast.LENGTH_SHORT).show()
-        viewModel.changeMode("finder")
     }
 }
 
@@ -182,8 +167,8 @@ private fun FinderPanel(
                 text = stringResource(id = R.string.label_today),
                 modifier = Modifier.padding(8.dp)
             )
-            FindYearPicker(uiState) { value ->
-                onChangeYear(value)
+            FindYearPicker(viewModel) { value ->
+                viewModel.changeYear(value)
             }
         }
         Row(
@@ -220,41 +205,12 @@ private fun FinderPanel(
     }
 }
 
-/*
-@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 private fun FindYearPicker(
-    uiState: PastWeatherViewModel.FinderUiState,
+    viewModel: PastWeatherViewModel,
     changeValue: (Int) -> Unit
 ) {
-    val color = MaterialTheme.colorScheme.primary.toArgb()
-    val text = stringResource(id = R.string.item_year_picker)
-
-    AndroidView(
-        factory = { context ->
-            NumberPicker(context).apply {
-                value = uiState.selectYear
-                maxValue = uiState.maxYear
-                minValue = uiState.minYear
-                textColor = color
-                setOnValueChangedListener { _, _, newValue ->
-                    changeValue(newValue)
-                }
-                contentDescription = text
-            }
-        },
-        update = { view ->
-            view.value = uiState.selectYear
-        }
-    )
-}
- */
-
-@Composable
-private fun FindYearPicker(
-    uiState: PastWeatherViewModel.FinderUiState,
-    changeValue: (Int) -> Unit
-) {
+    val uiState by viewModel.finderUi.collectAsState()
     val color = MaterialTheme.colorScheme.primary
 
     NumberCounter(
@@ -557,7 +513,10 @@ fun NumberCounter(
 ) {
     var count by remember { mutableIntStateOf(value - minValue) }
     val limit = maxValue - minValue
-    val lastModifier = Modifier.size(80.dp, 184.dp).padding(8.dp, 16.dp).then(modifier)
+    val lastModifier = Modifier
+        .size(80.dp, 184.dp)
+        .padding(8.dp, 16.dp)
+        .then(modifier)
 
     Column(
         verticalArrangement = Arrangement.SpaceAround,

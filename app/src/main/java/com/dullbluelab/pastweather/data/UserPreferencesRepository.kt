@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-private const val INITIAL_POINT = "tky"
+private const val INITIAL_POINT = ""
 private const val INITIAL_YEAR = 2023
 private const val INITIAL_MAX_YEAR = 0
 private const val INITIAL_MIN_YEAR = 0
@@ -59,7 +59,7 @@ class UserPreferencesRepository(
         }
     }
 
-    suspend fun saveInitial(data: DirectoryJson.Data) {
+    suspend fun saveInitial(data: DirectoryData.Table) {
         dataStore.edit { preferences ->
             preferences[DATA_VERSION] = data.version
             preferences[MAX_YEAR] = data.maxyear.toInt()

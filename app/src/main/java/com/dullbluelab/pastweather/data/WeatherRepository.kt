@@ -28,6 +28,8 @@ interface WeatherRepository {
     suspend fun clearAllTables()
     suspend fun clearDailyWeatherTables()
 
+    suspend fun clearLocationList()
+
     fun downloadWeatherData(
         pointCode: String,
         progress: (Int) -> Unit,
@@ -36,10 +38,10 @@ interface WeatherRepository {
         success: () -> Unit = {},
     )
 
-    fun deleteDataAt(code: String)
+    fun deleteDataAt(code: String, success: () -> Unit)
     fun updateDownloadFlag(item: LocationTable, flag: Boolean)
     fun updateDownloadFlag(code: String, flag: Boolean)
-    suspend fun updateLocationList(tables: List<DirectoryJson.Table>)
+    suspend fun updateLocationList(tables: List<DirectoryData.PointTable>)
 }
 
 class OfflineWeatherRepository(
@@ -78,6 +80,7 @@ class OfflineWeatherRepository(
     }
     override suspend fun clearAllTables() { database.clearAllTables() }
     override suspend fun clearDailyWeatherTables() { weatherDao.deleteAll() }
+    override suspend fun clearLocationList() { locationDao.deleteAll() }
 
     override fun downloadWeatherData(
         pointCode: String,
@@ -104,21 +107,21 @@ class OfflineWeatherRepository(
                         },
                         cancelFlag = { cancelFlag() },
                         failed = { message ->
-                            deleteDataAt(pointCode)
+                            deleteDataAt(pointCode, {})
                             failed(message)
                         }
                     )
                 },
                 cancelFlag = { cancelFlag() },
                 failed = { message ->
-                    deleteDataAt(pointCode)
+                    deleteDataAt(pointCode, {})
                     failed(message)
                 }
             )
         }
     }
 
-    override fun deleteDataAt(code: String) {
+    override fun deleteDataAt(code: String, success: () -> Unit) {
         val scope = CoroutineScope(Job() + Dispatchers.Default)
         scope.launch {
             deleteAt(code)
@@ -127,6 +130,7 @@ class OfflineWeatherRepository(
                 item?.let {
                     val newItem = item.copy(loaded = false)
                     updateLocation(newItem)
+                    success()
                 }
                 cancel()
             }
@@ -155,7 +159,7 @@ class OfflineWeatherRepository(
         }
     }
 
-    override suspend fun updateLocationList(tables: List<DirectoryJson.Table>) {
+    override suspend fun updateLocationList(tables: List<DirectoryData.PointTable>) {
         tables.forEach { src ->
             val item = LocationTable(0, src.code, src.name, false)
             insertLocation(item)

@@ -55,7 +55,7 @@ fun PastWeatherApp(
     viewModel: PastWeatherViewModel = viewModel(factory = PastWeatherViewModel.Factory)
 ) {
     val navController: NavHostController = rememberNavController()
-    val state by viewModel.rootUi.collectAsState()
+    val state by viewModel.routeUi.collectAsState()
     val context = LocalContext.current
 
     if (activity.destinationListener == null) {
@@ -66,8 +66,8 @@ fun PastWeatherApp(
     Scaffold(
         topBar = {
             PastWeatherTopAppBar(
-                currentScreen = state.position,
-                canNavigateBack = (navController.currentBackStackEntry != null && state.position != "Weather"),
+                currentScreen = state.route,
+                canNavigateBack = (navController.currentBackStackEntry != null && state.route != "Weather"),
                 navigateUp = {
                     navController.navigateUp()
                 },
@@ -91,8 +91,9 @@ fun PastWeatherApp(
             ) {
                 composable(route = PastWeatherScreen.Weather.name) {
                     WeatherScreen(
+                        activity = activity,
                         onChangeYear = { value -> viewModel.changeYear(value) },
-                        onChangeLocation = {
+                        onLocation = {
                             navController.navigate(PastWeatherScreen.Location.name)
                         },
                         viewModel = viewModel,
@@ -191,7 +192,7 @@ class DestinationListener(
         arguments: Bundle?
     ) {
         val route = destination.route ?: "Weather"
-        val prev = viewModel.rootUi.value.position
+        val prev = viewModel.routeUi.value.route
         val now = viewModel.downloadUi.value.status
 
         if (prev == "Download" && route != "Download" && now == "download") {
@@ -199,7 +200,7 @@ class DestinationListener(
             Toast.makeText(context, R.string.text_cancel_download, Toast.LENGTH_SHORT)
                 .show()
         }
-        viewModel.updatePositionUi(route)
+        viewModel.updateRoute(route)
     }
 }
 

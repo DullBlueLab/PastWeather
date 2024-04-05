@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 
 interface WeatherRepository {
     fun getTableStream(point: String, year: Int, month: Int, day: Int): Flow<DailyWeatherTable?>
+    fun getTableStreamMD(point: String, month: Int, day: Int): Flow<List<DailyWeatherTable>>
     suspend fun insertTable(table: DailyWeatherTable)
     suspend fun updateTable(table: DailyWeatherTable)
     suspend fun deleteTable(table: DailyWeatherTable)
@@ -56,6 +57,9 @@ class OfflineWeatherRepository(
 
     override fun getTableStream(point: String, year: Int, month: Int, day: Int)
     : Flow<DailyWeatherTable?> = weatherDao.getItem(point, year, month, day)
+
+    override fun getTableStreamMD(point: String, month: Int, day: Int)
+    : Flow<List<DailyWeatherTable>> = weatherDao.getItemMD(point, month, day)
 
     override suspend fun insertTable(table: DailyWeatherTable) = weatherDao.insert(table)
     override suspend fun updateTable(table: DailyWeatherTable) = weatherDao.update(table)
@@ -105,12 +109,11 @@ class OfflineWeatherRepository(
                             updateDownloadFlag(pointCode, true)
                             success()
                         },
-                        cancelFlag = { cancelFlag() },
-                        failed = { message ->
-                            deleteDataAt(pointCode, {})
-                            failed(message)
-                        }
-                    )
+                        cancelFlag = { cancelFlag() }
+                    ) { message ->
+                        deleteDataAt(pointCode) {}
+                        failed(message)
+                    }
                 },
                 cancelFlag = { cancelFlag() },
                 failed = { message ->

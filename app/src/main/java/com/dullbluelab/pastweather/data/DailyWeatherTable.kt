@@ -36,6 +36,9 @@ interface DailyWeatherDao {
     @Query("SELECT * FROM daily_weather_table WHERE point = :point AND year = :year AND month = :month AND day = :day")
     fun getItem(point: String, year: Int, month: Int, day: Int): Flow<DailyWeatherTable?>
 
+    @Query("SELECT * FROM daily_weather_table WHERE point = :point AND month = :month AND day = :day")
+    fun getItemMD(point: String, month: Int, day: Int): Flow<List<DailyWeatherTable>>
+
     @Query("DELETE FROM daily_weather_table")
     fun deleteAll()
 

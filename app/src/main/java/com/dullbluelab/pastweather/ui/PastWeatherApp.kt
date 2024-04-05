@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -91,7 +92,6 @@ fun PastWeatherApp(
             ) {
                 composable(route = PastWeatherScreen.Weather.name) {
                     WeatherScreen(
-                        activity = activity,
                         onChangeYear = { value -> viewModel.changeYear(value) },
                         onLocation = {
                             navController.navigate(PastWeatherScreen.Location.name)
@@ -157,7 +157,7 @@ fun PastWeatherTopAppBar(
             if (canNavigateBack) {
                 IconButton(onClick = navigateUp) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(id = R.string.button_back)
                     )
                 }

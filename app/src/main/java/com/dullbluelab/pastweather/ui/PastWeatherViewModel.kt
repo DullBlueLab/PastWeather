@@ -15,9 +15,7 @@ import com.dullbluelab.pastweather.data.LocationTable
 import com.dullbluelab.pastweather.data.UserPreferencesData
 import com.dullbluelab.pastweather.data.UserPreferencesRepository
 import com.dullbluelab.pastweather.data.WeatherRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +36,8 @@ class PastWeatherViewModel(
 
     data class RouteUiState(
         val route: String = "Weather",
-        val mode: String = "start" // or "finder", "graph", "average"
+        val mode: String = "start", // or "finder", "graph", "average"
+        val point: String = ""
     )
     private val _routeUi = MutableStateFlow(RouteUiState())
     val routeUi: StateFlow<RouteUiState> = _routeUi.asStateFlow()
@@ -109,7 +108,7 @@ class PastWeatherViewModel(
     private var locationList: List<LocationTable>? = null
     private val directory: DirectoryData = DirectoryData()
 
-    var currentPointCode: String = ""
+    private var currentPointCode: String = ""
     private var currentYear: Int = 0
 
     var selectLocationItem: LocationTable? = null
@@ -163,6 +162,10 @@ class PastWeatherViewModel(
             else others.add(item)
         }
         updateLocationListUi(entries.toList(), others.toList())
+
+        if (currentPointCode.isNotEmpty() && finderUi.value.pointName.isEmpty()) {
+            setsPointName(currentPointCode)
+        }
     }
 
     private fun catchPreferences(data: UserPreferencesData) {
@@ -218,6 +221,13 @@ class PastWeatherViewModel(
         }
     }
 
+    private fun setsPointName(code: String = currentPointCode) {
+        if (code.isEmpty()) return
+        val item = getLocationItem(code)
+        val name = item?.name ?: ""
+        updatePointNameUi(name)
+    }
+
     //
     // routeUi
 
@@ -240,8 +250,38 @@ class PastWeatherViewModel(
     //
     // FinderUi
 
+    private fun updateWeather(point: String, year: Int) {
+        if (point == "" || year == 0) return
+
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.Default) {
+                    val stream = weatherRepository.getTableStream(
+                        point, year, today.monthValue, today.dayOfMonth
+                    )
+                    stream.collect { table ->
+                        table?.let { updateFinderUi(point, it) }
+                        cancel()
+                    }
+                }
+            } catch (e: Exception) {
+                e.message?.let { Log.e(TAG, it) }
+            }
+        }
+    }
+
     private fun updatePointNameUi(name: String ) {
         _finderUi.update { state ->
+            state.copy(
+                pointName = name
+            )
+        }
+        _graphUi.update { state ->
+            state.copy(
+                pointName = name
+            )
+        }
+        _averageUi.update { state ->
             state.copy(
                 pointName = name
             )
@@ -266,144 +306,31 @@ class PastWeatherViewModel(
     //
     // GraphUi
 
-    private fun updateGraphUi(point: String, month: Int, day: Int, list: List<GraphTempItem>) {
-        val location = getLocationItem(point)
-        _graphUi.update { state ->
-            state.copy(
-                pointName = location?.name ?: "",
-                selectMonth = month,
-                selectDay = day,
-                tempList = list
-            )
-        }
-    }
-
-    //
-    // LocationUi
-
-    private fun updateLocationListUi(
-        entries: List<LocationTable>, others: List<LocationTable>) {
-        _locationUi.update { state ->
-            state.copy(
-                entryList = entries,
-                otherList = others
-            )
-        }
-    }
-
-    private fun updatePointCodeUi(code: String) {
-        _locationUi.update { state ->
-            state.copy(
-                pointCode = code
-            )
-        }
-    }
-
-    //
-    // DownloadUi
-
-    private fun updateDownloadStatusUi(mode: String, message: String = "") {
-        _downloadUi.update { state ->
-            state.copy(
-                status = mode,
-                message = message
-            )
-        }
-    }
-
-    private fun updateDownloadProgress(count: Int) {
-        viewModelScope.launch {
-            _downloadUi.update { state ->
-                state.copy(
-                    progressCount = count
-                )
-            }
-        }
-    }
-
-    //
-    // private var
-
-    private fun getLocationItem(code: String = currentPointCode): LocationTable? {
-        var result: LocationTable? = null
-        locationList?.let { list ->
-            for (item in list) {
-                if (item.code == code) {
-                    result = item
-                    break
-                }
-            }
-        }
-        return result
-    }
-
-    //
-    // init
-
-    private fun setsPointName(code: String = currentPointCode) {
-        if (code.isEmpty()) return
-        val item = getLocationItem(code)
-        val name = item?.name ?: ""
-        updatePointNameUi(name)
-    }
-
-    private fun updateWeather(point: String, year: Int) {
-        if (point == "" || year == 0) return
+    private fun updateGraphData() {
+        val point = currentPointCode
+        val month = today.monthValue
+        val day = today.dayOfMonth
+        graphList = mutableListOf()
 
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.Default) {
-                    val stream = weatherRepository.getTableStream(
-                        point, year, today.monthValue, today.dayOfMonth
-                    )
-                    stream.collect { table ->
-                        table?.let { updateFinderUi(point, it) }
+                    val stream = weatherRepository.getTableStreamMD(point, month, day)
+                    stream.collect { list ->
+                        for (item in list) {
+                            appendGraphItem(
+                                graphList,
+                                GraphTempItem(item.year, "", item.high, item.low)
+                            )
+                        }
+                        if (graphList.isNotEmpty()) {
+                            updateGraphUi(point, month, day, graphList.toList())
+                        }
                         cancel()
                     }
                 }
             } catch (e: Exception) {
                 e.message?.let { Log.e(TAG, it) }
-            }
-        }
-    }
-
-    //
-    // WeatherScreen
-
-    private fun updateGraphData() {
-        preferencesData?.let { data ->
-            val point = currentPointCode
-            val min = data.minYear
-            val max = data.maxYear
-            val size = max - min + 1
-            val month = today.monthValue
-            val day = today.dayOfMonth
-            var count = 0
-            graphList = mutableListOf()
-
-            for (year in min..max) {
-                viewModelScope.launch {
-                    try {
-                        withContext(Dispatchers.Default) {
-                            val stream = weatherRepository.getTableStream(point, year, month, day)
-                            stream.collect { table ->
-                                table?.let {
-                                    appendGraphItem(
-                                        graphList,
-                                        GraphTempItem(year, "", it.high, it.low)
-                                    )
-                                }
-                                count++
-                                if (count >= size) {
-                                    updateGraphUi(point, month, day, graphList.toList())
-                                }
-                                cancel()
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.message?.let { Log.e(TAG, it) }
-                    }
-                }
             }
         }
     }
@@ -418,16 +345,20 @@ class PastWeatherViewModel(
         if (count < list.size) list.add(count, item) else list.add(item)
     }
 
-    fun changeYear(year: Int) {
-        preferencesData?.let { preference ->
-            if (preference.minYear <= year && year <= preference.maxYear) {
-                viewModelScope.launch {
-                    preferences.saveYear(year)
-                }
-            }
+    private fun updateGraphUi(point: String, month: Int, day: Int, list: List<GraphTempItem>) {
+        val location = getLocationItem(point)
+        _graphUi.update { state ->
+            state.copy(
+                pointName = location?.name ?: "",
+                selectMonth = month,
+                selectDay = day,
+                tempList = list
+            )
         }
     }
 
+    //
+    // AverageUi
     private fun updateAverage() {
         val month = today.monthValue
         val day = today.dayOfMonth
@@ -472,6 +403,83 @@ class PastWeatherViewModel(
                 selectMonth = month,
                 selectDay = day
             )
+        }
+    }
+
+    //
+    // LocationUi
+
+    private fun updateLocationListUi(
+        entries: List<LocationTable>, others: List<LocationTable>) {
+        _locationUi.update { state ->
+            state.copy(
+                entryList = entries,
+                otherList = others
+            )
+        }
+    }
+
+    private fun updatePointCodeUi(code: String) {
+        _locationUi.update { state ->
+            state.copy(
+                pointCode = code
+            )
+        }
+        _routeUi.update { state ->
+            state.copy(
+                point = code
+            )
+        }
+    }
+
+    //
+    // DownloadUi
+
+    private fun updateDownloadStatusUi(mode: String, message: String = "") {
+        _downloadUi.update { state ->
+            state.copy(
+                status = mode,
+                message = message
+            )
+        }
+    }
+
+    private fun updateDownloadProgress(count: Int) {
+        viewModelScope.launch {
+            _downloadUi.update { state ->
+                state.copy(
+                    progressCount = count
+                )
+            }
+        }
+    }
+
+    //
+    // private var
+
+    private fun getLocationItem(code: String = currentPointCode): LocationTable? {
+        var result: LocationTable? = null
+        locationList?.let { list ->
+            for (item in list) {
+                if (item.code == code) {
+                    result = item
+                    break
+                }
+            }
+        }
+        return result
+    }
+
+    //
+    // WeatherScreen
+
+    fun changeYear(year: Int) {
+        preferencesData?.let { preference ->
+            if (preference.minYear <= year && year <= preference.maxYear) {
+                viewModelScope.launch {
+                    preferences.saveYear(year)
+                }
+            }
         }
     }
 

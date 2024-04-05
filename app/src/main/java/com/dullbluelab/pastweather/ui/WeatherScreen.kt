@@ -46,24 +46,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.dullbluelab.pastweather.MainActivity
 import com.dullbluelab.pastweather.R
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun WeatherScreen(
-    activity: MainActivity,
     onChangeYear: (Int) -> Unit,
     onLocation: () -> Unit,
     viewModel: PastWeatherViewModel,
     modifier: Modifier = Modifier
 ) {
     val routeUi by viewModel.routeUi.collectAsState()
-    val finderUi by viewModel.finderUi.collectAsState()
 
     if (routeUi.mode == "start") {
-        if (finderUi.pointName == "") {
+        if (routeUi.point == "") {
             StartDownload(onLocation = onLocation)
         }
         else {
@@ -168,7 +165,7 @@ private fun FinderPanel(
                 modifier = Modifier.padding(8.dp)
             )
             FindYearPicker(viewModel) { value ->
-                viewModel.changeYear(value)
+                onChangeYear(value)
             }
         }
         Row(
@@ -511,8 +508,7 @@ fun NumberCounter(
     modifier: Modifier = Modifier,
     onValueChangedListener: (Int) -> Unit,
 ) {
-    var count by remember { mutableIntStateOf(value - minValue) }
-    val limit = maxValue - minValue
+    var count = value
     val lastModifier = Modifier
         .size(80.dp, 184.dp)
         .padding(8.dp, 16.dp)
@@ -525,9 +521,9 @@ fun NumberCounter(
     ) {
         IconButton(
             onClick = {
-                if (count > 0) {
+                if (count > minValue) {
                     count --
-                    onValueChangedListener(minValue + count)
+                    onValueChangedListener(count)
                 }
             },
             modifier = Modifier.size(52.dp)
@@ -539,7 +535,7 @@ fun NumberCounter(
             )
         }
         Text(
-            text = "${minValue + count}",
+            text = "$count",
             color = textColor,
             fontSize = fontSize,
             textAlign = TextAlign.Center,
@@ -547,9 +543,9 @@ fun NumberCounter(
         )
         IconButton(
             onClick = {
-                if (count < limit) {
+                if (count < maxValue) {
                     count ++
-                    onValueChangedListener(minValue + count)
+                    onValueChangedListener(count)
                 }
             },
             modifier = Modifier.size(52.dp)

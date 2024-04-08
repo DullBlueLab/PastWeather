@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -217,8 +216,8 @@ fun  AdmobBanner(
                 // 下の行で広告ユニット ID を指定
                 // 現在追加されているテスト広告ユニット ID。
                 setAdSize(AdSize.BANNER)
-                adUnitId = "ca-app-pub-3940256099942544/9214589741" // test
-                // adUnitId = "ca-app-pub-5155739412996974/5785915157"
+                // adUnitId = "ca-app-pub-3940256099942544/9214589741" // test
+                adUnitId = "ca-app-pub-5155739412996974/5785915157"
                 // 呼び出し広告を読み込んで広告を読み込みます。
                 loadAd(AdRequest.Builder().build())
             }

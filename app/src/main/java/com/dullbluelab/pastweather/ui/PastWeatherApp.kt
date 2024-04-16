@@ -121,11 +121,11 @@ fun PastWeatherApp(
             }
             Box(
                 modifier = Modifier
-                    .height(64.dp)
+                    .height(100.dp)
                     .fillMaxWidth()
             ) {
                 AdmobBanner(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
                 )
             }
         }
@@ -141,8 +141,7 @@ fun PastWeatherTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     navigateUp: () -> Unit = {},
     onInfoButtonClicked: () -> Unit
-)
-{
+) {
     val title = when(currentScreen) {
         PastWeatherScreen.Weather.name -> stringResource(id = R.string.app_name)
         else -> currentScreen
@@ -208,7 +207,7 @@ fun  AdmobBanner(
     modifier: Modifier = Modifier
 ) {
     AndroidView(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxSize(),
         factory = { context ->
             AdView(context).apply {
                 // 下の行で広告ビューを指定します。広告サイズ
@@ -216,8 +215,8 @@ fun  AdmobBanner(
                 // 下の行で広告ユニット ID を指定
                 // 現在追加されているテスト広告ユニット ID。
                 setAdSize(AdSize.BANNER)
-                // adUnitId = "ca-app-pub-3940256099942544/9214589741" // test
-                adUnitId = "ca-app-pub-5155739412996974/5785915157"
+                adUnitId = "ca-app-pub-3940256099942544/9214589741" // test
+                // adUnitId = "ca-app-pub-5155739412996974/5785915157"
                 // 呼び出し広告を読み込んで広告を読み込みます。
                 loadAd(AdRequest.Builder().build())
             }

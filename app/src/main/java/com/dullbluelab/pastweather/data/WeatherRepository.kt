@@ -1,154 +1,62 @@
 package com.dullbluelab.pastweather.data
 
+import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-interface WeatherRepository {
-    fun getTableStream(point: String, year: Int, month: Int, day: Int): Flow<DailyWeatherTable?>
-    fun getTableStreamMD(point: String, month: Int, day: Int): Flow<List<DailyWeatherTable>>
-    suspend fun insertTable(table: DailyWeatherTable)
-    suspend fun updateTable(table: DailyWeatherTable)
-    suspend fun deleteTable(table: DailyWeatherTable)
-
-    suspend fun insertLocation(item: LocationTable)
-    suspend fun updateLocation(item: LocationTable)
-    suspend fun deleteLocation(item: LocationTable)
-    fun getAllLocation(): Flow<List<LocationTable>>
-    fun getLocationItem(code: String): Flow<LocationTable?>
-
-    fun getAverageStream(point: String, month: Int, day: Int): Flow<List<AverageWeatherTable>>
-    suspend fun insertAverage(table: AverageWeatherTable)
-    suspend fun updateAverage(table: AverageWeatherTable)
-    suspend fun deleteAverage(table: AverageWeatherTable)
-
-    suspend fun deleteAt(code: String)
-    suspend fun clearAllTables()
-    suspend fun clearDailyWeatherTables()
-
-    suspend fun clearLocationList()
-
-    fun downloadWeatherData(
-        pointCode: String,
-        progress: (Int) -> Unit,
-        cancelFlag: () -> Boolean,
-        failed: (String) -> Unit = {},
-        success: () -> Unit = {},
-    )
-
-    fun deleteDataAt(code: String, success: () -> Unit)
-    fun updateDownloadFlag(item: LocationTable, flag: Boolean)
-    fun updateDownloadFlag(code: String, flag: Boolean)
-    suspend fun updateLocationList(tables: List<DirectoryData.PointTable>)
-}
-
-class OfflineWeatherRepository(
-    private val database: WeatherDatabase
-) : WeatherRepository {
-    private val weatherDao: DailyWeatherDao = database.dailyWeatherDao()
+class WeatherRepository(database: WeatherDatabase, context: Context) {
+    private val dailyWeatherDao: DailyWeatherDao = database.dailyWeatherDao()
+    private val averageWeatherDao: AverageWeatherDao = database.averageWeatherDao()
     private val locationDao: LocationListDao = database.locationListDao()
-    private val averageDao: AverageWeatherDao = database.averageWeatherDao()
 
-    private val weatherDataCsv: WeatherDataCsv = WeatherDataCsv()
-    private val averageDataCsv: AverageDataCsv = AverageDataCsv()
+    private val weatherData: WeatherDataCsv = WeatherDataCsv(context)
+    private val averageData: AverageDataCsv = AverageDataCsv(context)
 
-    override fun getTableStream(point: String, year: Int, month: Int, day: Int)
-    : Flow<DailyWeatherTable?> = weatherDao.getItem(point, year, month, day)
+    var weatherList: List<WeatherDataCsv.Table> = listOf()
+    var averageList: List<AverageDataCsv.Table> = listOf()
 
-    override fun getTableStreamMD(point: String, month: Int, day: Int)
-    : Flow<List<DailyWeatherTable>> = weatherDao.getItemMD(point, month, day)
+    suspend fun download(point: String) {
+        weatherData.download(point)
+        averageData.download(point)
+        updateDownloadFlag(point, true)
 
-    override suspend fun insertTable(table: DailyWeatherTable) = weatherDao.insert(table)
-    override suspend fun updateTable(table: DailyWeatherTable) = weatherDao.update(table)
-    override suspend fun deleteTable(table: DailyWeatherTable) = weatherDao.delete(table)
-
-    override suspend fun insertLocation(item: LocationTable) = locationDao.insert(item)
-    override suspend fun updateLocation(item: LocationTable) = locationDao.update(item)
-    override suspend fun deleteLocation(item: LocationTable) = locationDao.delete(item)
-    override fun getAllLocation(): Flow<List<LocationTable>> = locationDao.getAll()
-    override fun getLocationItem(code: String): Flow<LocationTable?> = locationDao.getItem(code)
-
-    override fun getAverageStream(point: String, month: Int, day: Int): Flow<List<AverageWeatherTable>>
-    = averageDao.getItems(point, month, day)
-
-    override suspend fun insertAverage(table: AverageWeatherTable) = averageDao.insert(table)
-    override suspend fun updateAverage(table: AverageWeatherTable) = averageDao.update(table)
-    override suspend fun deleteAverage(table: AverageWeatherTable) = averageDao.delete(table)
-
-    override suspend fun deleteAt(code: String) {
-        averageDao.deleteAt(code)
-        weatherDao.deleteAt(code)
-    }
-    override suspend fun clearAllTables() { database.clearAllTables() }
-    override suspend fun clearDailyWeatherTables() { weatherDao.deleteAll() }
-    override suspend fun clearLocationList() { locationDao.deleteAll() }
-
-    override fun downloadWeatherData(
-        pointCode: String,
-        progress: (Int) -> Unit,
-        cancelFlag: () -> Boolean,
-        failed: (String) -> Unit,
-        success: () -> Unit,
-    ) {
-        val repository = this
-        val scope = CoroutineScope(Job() + Dispatchers.IO)
-        scope.launch {
-            weatherDataCsv.updateWeatherData(
-                point = pointCode,
-                repository = repository,
-                progress = { per -> progress(per) },
-                success = {
-                    averageDataCsv.updateAverageData(
-                        point = pointCode,
-                        repository = repository,
-                        progress = { per -> progress(per) },
-                        success = {
-                            updateDownloadFlag(pointCode, true)
-                            success()
-                        },
-                        cancelFlag = { cancelFlag() }
-                    ) { message ->
-                        deleteDataAt(pointCode) {}
-                        failed(message)
-                    }
-                },
-                cancelFlag = { cancelFlag() },
-                failed = { message ->
-                    deleteDataAt(pointCode, {})
-                    failed(message)
-                }
-            )
-        }
     }
 
-    override fun deleteDataAt(code: String, success: () -> Unit) {
-        val scope = CoroutineScope(Job() + Dispatchers.Default)
-        scope.launch {
-            deleteAt(code)
-            val stream = getLocationItem(code)
-            stream.collect { item ->
-                item?.let {
-                    val newItem = item.copy(loaded = false)
-                    updateLocation(newItem)
-                    success()
-                }
-                cancel()
+    suspend fun loadData(point: String, month: Int, day: Int) {
+        weatherList = weatherData.loadMatches(point, month, day)
+        averageList = averageData.loadMatches(point, month, day)
+    }
+
+    fun getWeatherItem(year: Int): WeatherDataCsv.Table? {
+        var result: WeatherDataCsv.Table? = null
+        for (item in weatherList) {
+            if (item.year == year) {
+                result = item
+                break
             }
         }
+        return result
     }
 
-    override fun updateDownloadFlag(item: LocationTable, flag: Boolean) {
-        val newItem = item.copy(loaded = flag)
-        val scope = CoroutineScope(Job() + Dispatchers.Default)
-        scope.launch {
-            updateLocation(newItem)
-        }
+    suspend fun deleteAt(point: String) {
+        averageData.deleteFile(point)
+        weatherData.deleteFile(point)
+        updateDownloadFlag(point, false)
     }
 
-    override fun updateDownloadFlag(code: String, flag: Boolean) {
+    private suspend fun insertLocation(item: LocationTable) = locationDao.insert(item)
+    private suspend fun updateLocation(item: LocationTable) = locationDao.update(item)
+    fun getAllLocation(): Flow<List<LocationTable>> = locationDao.getAll()
+    private fun getLocationItem(code: String): Flow<LocationTable?> = locationDao.getItem(code)
+
+    fun clearLocationList() { locationDao.deleteAll() }
+
+    private fun updateDownloadFlag(code: String, flag: Boolean) {
         val scope = CoroutineScope(Job() + Dispatchers.Default)
         scope.launch {
             val stream = getLocationItem(code)
@@ -162,11 +70,18 @@ class OfflineWeatherRepository(
         }
     }
 
-    override suspend fun updateLocationList(tables: List<DirectoryData.PointTable>) {
+    suspend fun updateLocationList(tables: List<DirectoryData.PointTable>) {
         tables.forEach { src ->
             val item = LocationTable(0, src.code, src.name, false)
             insertLocation(item)
         }
     }
 
+    suspend fun cleanupPrevData() {
+        withContext(Dispatchers.Default) {
+            dailyWeatherDao.deleteAll()
+            averageWeatherDao.deleteAll()
+            locationDao.deleteAll()
+        }
+    }
 }

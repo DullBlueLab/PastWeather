@@ -1,84 +1,60 @@
 package com.dullbluelab.pastweather.data
 
-import kotlinx.coroutines.CoroutineScope
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.net.URL
+import java.io.File
 
-private const val BASE_URL = "https://dullbluelab.nobushi.jp"
-private const val DATA_PATH = "/pastweather/data/"
 private const val WEATHER_DATA_FILE_NAME_TOP = "wd_"
 
-class WeatherDataCsv {
+class WeatherDataCsv(private val context: Context)
+    :  CsvDataFile(context, WEATHER_DATA_FILE_NAME_TOP)
+{
 
-    data class Table(
+    class Table(
         val year: Int,
         val month: Int,
         val day: Int,
         val high: Double,
         val low: Double,
-        val sky: String
-    )
-
-    fun updateWeatherData(
-    point: String,
-    repository: WeatherRepository,
-    progress: (Int) -> Unit,
-    success: () -> Unit,
-    cancelFlag: () -> Boolean,
-    failed: (String) -> Unit
+        val sky: String,
     ) {
-        var percent = 0
-        val scope = CoroutineScope(Job() + Dispatchers.Default)
-        scope.launch {
-            try {
-                val url = URL("$BASE_URL$DATA_PATH$WEATHER_DATA_FILE_NAME_TOP$point.csv")
-                val reader = withContext(Dispatchers.IO) {
-                    url.openConnection().getInputStream().reader()
-                }
-                val lines = reader.readLines()
+        companion object {
+            fun convert(line: String): Table {
+                val items = line.split(",")
+                val year = items[0].toInt()
+                val month = items[1].toInt()
+                val day = items[2].toInt()
+                val high = items[3].toDouble()
+                val low = items[4].toDouble()
+                val sky = items[5]
 
-                for (count in 1..< lines.size) {
-                    storeToDatabase(point, repository, convertLine(lines[count]))
-
-                    val value = count * 50 / lines.size
-                    if (percent != value) {
-                        progress(value)
-                        percent = value
-                    }
-                    if (cancelFlag()) throw Exception("cancel")
-                }
-                success()
-            } catch (e: Exception) {
-                failed("${e.message}")
+                return Table(year, month, day, high, low, sky)
             }
         }
     }
 
-    private suspend fun storeToDatabase(
-        point: String,
-        repository: WeatherRepository,
-        table: Table
-    ) {
-        val daily = DailyWeatherTable(
-            0, point, table.year, table.month, table.day,
-            table.high, table.low, table.sky
-        )
-        repository.insertTable(daily)
+    suspend fun loadMatches(point: String, month: Int, day: Int): List<Table> {
+        val matches = mutableListOf<Table>()
 
-    }
+        withContext(Dispatchers.IO) {
+            val name = "$WEATHER_DATA_FILE_NAME_TOP$point.csv"
+            val stream = File(context.filesDir, name).inputStream()
+            val reader = stream.reader()
+            var head = ""
 
-    private fun convertLine(line: String): Table {
-        val items = line.split(",")
-        val year = items[0].toInt()
-        val month = items[1].toInt()
-        val day = items[2].toInt()
-        val high = items[3].toDouble()
-        val low = items[4].toDouble()
-        val sky = items[5]
+            reader.forEachLine { line ->
+                if (head.isEmpty()) head = line
+                else {
+                    val item = Table.convert(line)
+                    if (item.month == month && item.day == day) {
+                        matches.add(item)
+                    }
+                }
+            }
+            stream.close()
+        }
 
-        return Table(year, month, day, high, low, sky)
+        return matches.toList()
     }
 }

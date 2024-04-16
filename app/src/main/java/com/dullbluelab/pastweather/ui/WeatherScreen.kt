@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,52 +60,53 @@ fun WeatherScreen(
 ) {
     val routeUi by viewModel.routeUi.collectAsState()
 
-    if (routeUi.mode == "start") {
-        if (routeUi.point == "") {
-            StartDownload(onLocation = onLocation)
+    when (routeUi.mode) {
+        "point" -> {
+            StartDownload(onLocation = onLocation, modifier = modifier)
         }
-        else {
-            viewModel.updateMode("finder")
+        "start" -> {
+            StartPanel(
+                modifier = modifier.fillMaxSize()
+            )
         }
-    }
-    else {
-        TagPager(
-            tagList = listOf(
-                stringResource(id = R.string.tag_finder),
-                stringResource(id = R.string.tag_graph),
-                stringResource(id = R.string.tag_average)
-            ),
-            pageList = listOf(
-                {
-                    FinderPanel(
-                        viewModel = viewModel,
-                        onChangeYear = onChangeYear,
-                        onChangeLocation = onLocation,
-                        modifier = Modifier
-                            .fillMaxSize()
-                    )
-                },
-                {
-                    GraphPanel(
-                        viewModel = viewModel,
-                        modifier = Modifier
-                            .fillMaxSize()
-                    )
-                },
-                {
-                    AveragePanel(
-                        viewModel = viewModel,
-                        modifier = Modifier
-                            .fillMaxSize()
-                    )
-                }
-            ),
-            modifier = modifier.fillMaxSize()
-        )
+        else -> {
+            TagPager(
+                tagList = listOf(
+                    stringResource(id = R.string.tag_finder),
+                    stringResource(id = R.string.tag_graph),
+                    stringResource(id = R.string.tag_average)
+                ),
+                pageList = listOf(
+                    {
+                        FinderPanel(
+                            viewModel = viewModel,
+                            onChangeYear = onChangeYear,
+                            onChangeLocation = onLocation,
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    },
+                    {
+                        GraphPanel(
+                            viewModel = viewModel,
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    },
+                    {
+                        AveragePanel(
+                            viewModel = viewModel,
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    }
+                ),
+                modifier = modifier.fillMaxSize()
+            )
 
+        }
     }
 }
-
 
 @Composable
 private fun StartDownload(
@@ -121,6 +123,21 @@ private fun StartDownload(
         ) {
             Text(text = stringResource(id = R.string.button_point))
         }
+    }
+}
+
+@Composable
+private fun StartPanel(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.fillMaxSize()
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(48.dp, 48.dp)
+        )
     }
 }
 

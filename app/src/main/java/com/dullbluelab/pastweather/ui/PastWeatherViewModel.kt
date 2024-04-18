@@ -134,11 +134,11 @@ class PastWeatherViewModel(
     // init
 
     init {
-        viewModelScope.launch {
-            locationStream.collect { list ->
-                updateLocation(list)
-            }
-        }
+        versionSetting()
+        chainFlowPipe()
+    }
+
+    private fun versionSetting() {
         viewModelScope.launch {
             preferenceStream.collect { data ->
                 try {
@@ -169,32 +169,47 @@ class PastWeatherViewModel(
                 }
             }
         }
+    }
 
+    private fun chainFlowPipe() {
+        viewModelScope.launch {
+            locationStream.collect { list ->
+                updateLocation(list)
+            }
+        }
         viewModelScope.launch {
             preferenceStream.collect { data ->
-                if (data.dataVersion == "2") {
-                    var changed = false
-                    preferencesData = data
+                try {
+                    if (data.dataVersion == "2") {
+                        var changed = false
+                        preferencesData = data
 
-                    if (data.selectPoint.isNotEmpty() && currentPointCode != data.selectPoint) {
-                        currentPointCode = data.selectPoint
-                        weatherRepository.loadData(currentPointCode, today.monthValue, today.dayOfMonth)
-                        setsPointName(currentPointCode)
-                        updatePointCodeUi(currentPointCode)
+                        if (data.selectPoint.isNotEmpty() && currentPointCode != data.selectPoint) {
+                            currentPointCode = data.selectPoint
+                            weatherRepository.loadData(
+                                currentPointCode,
+                                today.monthValue,
+                                today.dayOfMonth
+                            )
+                            setsPointName(currentPointCode)
+                            updatePointCodeUi(currentPointCode)
 
-                        updateGraphData()
-                        updateAverage()
-                        changed = true
+                            updateGraphData()
+                            updateAverage()
+                            changed = true
+                        }
+                        if (data.selectYear != 0 && currentYear != data.selectYear) {
+                            currentYear = data.selectYear
+                            changed = true
+                        }
+                        if (changed) {
+                            updateWeather(currentYear)
+                            val mode = routeUi.value.mode
+                            if (mode == "start" || mode == "point") updateMode("finder")
+                        }
                     }
-                    if (data.selectYear != 0 && currentYear != data.selectYear) {
-                        currentYear = data.selectYear
-                        changed = true
-                    }
-                    if (changed) {
-                        updateWeather(currentYear)
-                        val mode = routeUi.value.mode
-                        if (mode == "start" || mode == "point") updateMode("finder")
-                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, e.message, e)
                 }
             }
         }
@@ -335,20 +350,15 @@ class PastWeatherViewModel(
         graphList = mutableListOf()
 
         viewModelScope.launch {
-            try {
-                val list = weatherRepository.weatherList
-                for (item in list) {
-                    appendGraphItem(
-                        graphList,
-                        GraphTempItem(item.year, "", item.high, item.low)
-                    )
-                }
-                if (graphList.isNotEmpty()) {
-                    updateGraphUi(point, month, day, graphList.toList())
-                }
+            val list = weatherRepository.weatherList
+            for (item in list) {
+                appendGraphItem(
+                    graphList,
+                    GraphTempItem(item.year, "", item.high, item.low)
+                )
             }
-            catch (e: Exception) {
-                Log.e(TAG, e.message, e)
+            if (graphList.isNotEmpty()) {
+                updateGraphUi(point, month, day, graphList.toList())
             }
         }
     }
@@ -382,18 +392,13 @@ class PastWeatherViewModel(
         val day = today.dayOfMonth
 
         viewModelScope.launch {
-            try {
-                val point = currentPointCode
-                val list = weatherRepository.averageList
-                if (list.isNotEmpty()) {
-                    val sorted = list.sortedBy { it.years }
-                    val start = sorted[0].years
-                    val end = sorted[sorted.size - 1].years
-                    updateAverageUi(sorted, start, end, point, month, day)
-                }
-            }
-            catch (e: Exception) {
-                e.message?.let { Log.e(TAG, it) }
+            val point = currentPointCode
+            val list = weatherRepository.averageList
+            if (list.isNotEmpty()) {
+                val sorted = list.sortedBy { it.years }
+                val start = sorted[0].years
+                val end = sorted[sorted.size - 1].years
+                updateAverageUi(sorted, start, end, point, month, day)
             }
         }
     }

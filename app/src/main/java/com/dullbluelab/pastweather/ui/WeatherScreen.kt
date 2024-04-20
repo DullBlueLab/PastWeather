@@ -65,7 +65,9 @@ fun WeatherScreen(
             StartDownload(onLocation = onLocation, modifier = modifier)
         }
         "start" -> {
-            StartPanel(modifier = modifier.fillMaxSize())
+            StartPanel(
+                modifier = modifier.fillMaxSize()
+            )
         }
         else -> {
             TagPager(

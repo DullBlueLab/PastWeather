@@ -1,11 +1,8 @@
 package com.dullbluelab.pastweather.ui
 
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -56,10 +52,9 @@ fun PastWeatherApp(
 ) {
     val navController: NavHostController = rememberNavController()
     val state by viewModel.routeUi.collectAsState()
-    val context = LocalContext.current
 
     if (activity.destinationListener == null) {
-        activity.destinationListener = DestinationListener(context, viewModel)
+        activity.destinationListener = DestinationListener(viewModel)
         navController.addOnDestinationChangedListener(activity.destinationListener!!)
     }
 
@@ -119,15 +114,11 @@ fun PastWeatherApp(
                     )
                 }
             }
-            Box(
+            AdmobBanner(
                 modifier = Modifier
                     .height(120.dp)
                     .fillMaxWidth()
-            ) {
-                AdmobBanner(
-                    modifier = Modifier
-                )
-            }
+            )
         }
     }
 }
@@ -179,7 +170,6 @@ fun PastWeatherTopAppBar(
 }
 
 class DestinationListener(
-    private val context: Context,
     private val viewModel: PastWeatherViewModel
 )
     : NavController.OnDestinationChangedListener {
@@ -190,14 +180,6 @@ class DestinationListener(
         arguments: Bundle?
     ) {
         val route = destination.route ?: "Weather"
-        val prev = viewModel.routeUi.value.route
-        val now = viewModel.downloadUi.value.status
-
-        if (prev == "Download" && route != "Download" && now == "download") {
-            viewModel.checkAndCancelDownload()
-            Toast.makeText(context, R.string.text_cancel_download, Toast.LENGTH_SHORT)
-                .show()
-        }
         viewModel.updateRoute(route)
     }
 }

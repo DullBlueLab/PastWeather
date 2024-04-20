@@ -31,4 +31,14 @@
     <string name="error_browse">not connect internet</string>
     <string name="homepage_url">https://dullbluelab.nobushi.jp/index.html</string>
     <string name="item_year_picker">Number picker of year</string>
+    <string name="text_update_data">Updating weather data</string>
+    <string name="text_startup">Setting initial data</string>
+    <string name="text_collect_data">Collecting weather data</string>
+    <string name="text_add_download">Download additional weather data</string>
+    <string name="text_high_temp">High temp</string>
+    <string name="text_high_record">High record</string>
+    <string name="text_low_temp">Low temp</string>
+    <string name="text_low_record">Low record</string>
+    <string name="tag_peak">Peak</string>
+    <string name="text_recent_temp">Average temperature for the last 20 years</string>
 </resources>

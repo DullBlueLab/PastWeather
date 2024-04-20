@@ -31,4 +31,14 @@
     <string name="error_browse">インターネットにアクセス出来ませんでした</string>
     <string name="homepage_url">https://dullbluelab.nobushi.jp/index.html</string>
     <string name="item_year_picker">検索する年を選択</string>
+    <string name="text_update_data">気象データを更新します</string>
+    <string name="text_startup">初期設定をします</string>
+    <string name="text_collect_data">気象データを集計しています</string>
+    <string name="text_add_download">追加データをダウンロードします</string>
+    <string name="text_high_temp">High temp</string>
+    <string name="text_high_record">最高記録</string>
+    <string name="text_low_record">最低記録</string>
+    <string name="tag_peak">Peak</string>
+    <string name="text_recent_temp">直近20年の平均気温</string>
+    <string name="text_low_temp">Low temp</string>
 </resources>

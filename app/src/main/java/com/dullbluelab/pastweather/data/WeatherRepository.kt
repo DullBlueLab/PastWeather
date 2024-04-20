@@ -16,13 +16,17 @@ class WeatherRepository(database: WeatherDatabase, context: Context) {
 
     private val weatherData: WeatherDataCsv = WeatherDataCsv(context)
     private val averageData: AverageDataCsv = AverageDataCsv(context)
+    private val peakData: PeakDataCsv = PeakDataCsv(context)
 
     var weatherList: List<WeatherDataCsv.Table> = listOf()
     var averageList: List<AverageDataCsv.Table> = listOf()
+    var peakItem: PeakDataCsv.Table? = null
+    val recentAverage: RecentAverageData = RecentAverageData()
 
     suspend fun download(point: String) {
         weatherData.download(point)
         averageData.download(point)
+        peakData.download(point)
         updateDownloadFlag(point, true)
 
     }
@@ -30,6 +34,8 @@ class WeatherRepository(database: WeatherDatabase, context: Context) {
     suspend fun loadData(point: String, month: Int, day: Int) {
         weatherList = weatherData.loadMatches(point, month, day)
         averageList = averageData.loadMatches(point, month, day)
+        peakItem = peakData.loadMatches(point, month, day)
+        recentAverage.calculate(weatherList)
     }
 
     fun getWeatherItem(year: Int): WeatherDataCsv.Table? {
@@ -46,7 +52,23 @@ class WeatherRepository(database: WeatherDatabase, context: Context) {
     suspend fun deleteAt(point: String) {
         averageData.deleteFile(point)
         weatherData.deleteFile(point)
+        peakData.deleteFile(point)
         updateDownloadFlag(point, false)
+    }
+
+    suspend fun reloadWeatherCsv(list: List<LocationTable>) {
+        list.forEach { item ->
+            if (item.loaded) {
+                download(item.code)
+            }
+        }
+    }
+    suspend fun appendPeakDataCsv(list: List<LocationTable>) {
+        list.forEach { item ->
+            if (item.loaded) {
+                peakData.download(item.code)
+            }
+        }
     }
 
     private suspend fun insertLocation(item: LocationTable) = locationDao.insert(item)
@@ -54,7 +76,11 @@ class WeatherRepository(database: WeatherDatabase, context: Context) {
     fun getAllLocation(): Flow<List<LocationTable>> = locationDao.getAll()
     private fun getLocationItem(code: String): Flow<LocationTable?> = locationDao.getItem(code)
 
-    fun clearLocationList() { locationDao.deleteAll() }
+    suspend fun clearLocationList() {
+        withContext(Dispatchers.IO) {
+            locationDao.deleteAll()
+        }
+    }
 
     private fun updateDownloadFlag(code: String, flag: Boolean) {
         val scope = CoroutineScope(Job() + Dispatchers.Default)
@@ -81,7 +107,6 @@ class WeatherRepository(database: WeatherDatabase, context: Context) {
         withContext(Dispatchers.Default) {
             dailyWeatherDao.deleteAll()
             averageWeatherDao.deleteAll()
-            locationDao.deleteAll()
         }
     }
 }

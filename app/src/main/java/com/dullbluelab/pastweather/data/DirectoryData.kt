@@ -4,6 +4,8 @@ import android.content.res.Resources
 import android.util.Log
 import com.dullbluelab.pastweather.R
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private const val TAG = "DirectoryData"
 
@@ -22,16 +24,17 @@ class DirectoryData {
         val name: String
     )
 
-    fun load(resources: Resources): Table? {
+    suspend fun load(resources: Resources): Table? {
         var data: Table? = null
-        try {
-            val inputStream = resources.openRawResource(R.raw.directory)
-            val jsonText = inputStream.bufferedReader().use { it.readText() }
+        withContext(Dispatchers.IO) {
+            try {
+                val inputStream = resources.openRawResource(R.raw.directory)
+                val jsonText = inputStream.bufferedReader().use { it.readText() }
 
-            data = Gson().fromJson(jsonText, Table::class.java)
-        }
-        catch (e: Exception) {
-            Log.e(TAG, e.message, e)
+                data = Gson().fromJson(jsonText, Table::class.java)
+            } catch (e: Exception) {
+                Log.e(TAG, e.message, e)
+            }
         }
         return data
     }

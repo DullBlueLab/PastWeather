@@ -180,13 +180,11 @@ class PastWeatherViewModel(
         viewModelScope.launch {
             preferenceStream.collect { data ->
                 try {
-                    if (data.dataVersion == "2"
-                        && data.selectPoint.isNotEmpty() && data.selectYear != 0) {
-
+                    if (data.dataVersion == "2") {
                         var changed = false
                         preferencesData = data
 
-                        if (currentPointCode != data.selectPoint) {
+                        if (data.selectPoint.isNotEmpty() && currentPointCode != data.selectPoint) {
                             currentPointCode = data.selectPoint
                             weatherRepository.loadData(
                                 currentPointCode,
@@ -200,7 +198,7 @@ class PastWeatherViewModel(
                             updateAverage()
                             changed = true
                         }
-                        if (currentYear != data.selectYear) {
+                        if (data.selectYear != 0 && currentYear != data.selectYear) {
                             currentYear = data.selectYear
                             changed = true
                         }

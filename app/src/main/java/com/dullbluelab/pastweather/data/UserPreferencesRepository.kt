@@ -7,9 +7,11 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 private const val INITIAL_POINT = ""
@@ -48,28 +50,36 @@ class UserPreferencesRepository(
         }
 
     suspend fun savePoint(point: String) {
-        dataStore.edit { preferences ->
-            preferences[SELECT_POINT] = point
+        withContext(Dispatchers.IO) {
+            dataStore.edit { preferences ->
+                preferences[SELECT_POINT] = point
+            }
         }
     }
 
     suspend fun saveYear(year: Int) {
-        dataStore.edit { preferences ->
-            preferences[SELECT_YEAR] = year
+        withContext(Dispatchers.IO) {
+            dataStore.edit { preferences ->
+                preferences[SELECT_YEAR] = year
+            }
         }
     }
 
     suspend fun saveInitial(data: DirectoryData.Table) {
-        dataStore.edit { preferences ->
-            preferences[DATA_VERSION] = data.version
-            preferences[MAX_YEAR] = data.maxyear.toInt()
-            preferences[MIN_YEAR] = data.minyear.toInt()
+        withContext(Dispatchers.IO) {
+            dataStore.edit { preferences ->
+                preferences[DATA_VERSION] = data.version
+                preferences[MAX_YEAR] = data.maxyear.toInt()
+                preferences[MIN_YEAR] = data.minyear.toInt()
+            }
         }
     }
 
     suspend fun clearData() {
-        dataStore.edit {
-            it.clear()
+        withContext(Dispatchers.IO) {
+            dataStore.edit {
+                it.clear()
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,6 +47,7 @@ fun WeatherScreen(
         }
         "start" -> {
             StartPanel(
+                state = routeUi,
                 modifier = modifier.fillMaxSize()
             )
         }
@@ -105,6 +107,7 @@ private fun StartDownload(
 
 @Composable
 private fun StartPanel(
+    state: PastWeatherViewModel.RouteUiState,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -115,6 +118,12 @@ private fun StartPanel(
         CircularProgressIndicator(
             modifier = Modifier.size(48.dp, 48.dp)
         )
+        if (state.messageId != 0) {
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = stringResource(id = state.messageId)
+            )
+        }
     }
 }
 

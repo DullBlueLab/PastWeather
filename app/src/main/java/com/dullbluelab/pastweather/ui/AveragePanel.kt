@@ -26,18 +26,18 @@ fun AveragePanel(
     modifier: Modifier = Modifier
 ) {
     val averageUi by viewModel.averageUi.collectAsState()
-    val days = "${averageUi.selectMonth}/${averageUi.selectDay} in " +
-            "${averageUi.minYears} - ${averageUi.maxYears}"
+    val days = " ${averageUi.selectMonth}/${averageUi.selectDay}"
+    val years = "${averageUi.minYears} - ${averageUi.maxYears}"
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = averageUi.pointName,
+            text = averageUi.pointName + days,
             modifier = Modifier
                 .padding(8.dp)
         )
@@ -51,7 +51,7 @@ fun AveragePanel(
         Spacer(modifier = Modifier.height(48.dp))
 
         Text(
-            text = days,
+            text = years,
             modifier = Modifier.padding(8.dp)
         )
         if (averageUi.tempList.isNotEmpty()) {

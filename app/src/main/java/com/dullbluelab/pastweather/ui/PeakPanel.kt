@@ -43,18 +43,10 @@ fun PeakPanel(
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = uiState.pointName,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                    Text(
-                        text = "${data.month}/${data.day}",
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
+                Text(
+                    text = "${uiState.pointName} ${data.month}/${data.day}",
+                    modifier = Modifier.padding(8.dp)
+                )
 
                 Spacer(modifier = Modifier.height(32.dp))
 

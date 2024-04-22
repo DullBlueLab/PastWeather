@@ -111,8 +111,11 @@ fun FinderPanel(
             fontSize = 18.sp
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(48.dp))
 
+        Text(
+            text = "${uiState.minYear} - ${uiState.maxYear}"
+        )
         GraphCanvas(
             tempList = uiState.tempList,
             modifier = Modifier

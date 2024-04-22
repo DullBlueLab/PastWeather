@@ -30,7 +30,6 @@ class WeatherRepository(database: WeatherDatabase, private val context: Context)
         averageData.download(point)
         peakData.download(point)
         updateDownloadFlag(point, true)
-
     }
 
     suspend fun loadData(point: String, month: Int, day: Int) {
@@ -78,8 +77,6 @@ class WeatherRepository(database: WeatherDatabase, private val context: Context)
     fun getAllLocation(): Flow<List<LocationTable>> = locationDao.getAll()
     private fun getLocationItem(code: String): Flow<LocationTable?> = locationDao.getItem(code)
 
-    suspend fun clearLocationList() { locationDao.deleteAll() }
-
     private fun updateDownloadFlag(code: String, flag: Boolean) {
         val scope = CoroutineScope(Job() + Dispatchers.Default)
         scope.launch {
@@ -101,9 +98,11 @@ class WeatherRepository(database: WeatherDatabase, private val context: Context)
         }
     }
 
-    fun cleanupPrevData() {
-        dailyWeatherDao.deleteAll()
-        averageWeatherDao.deleteAll()
+    suspend fun cleanupPrevData() {
+        withContext(Dispatchers.IO) {
+            dailyWeatherDao.deleteAll()
+            averageWeatherDao.deleteAll()
+        }
     }
 
     suspend fun loadDirectory(): DirectoryData.Table? {

@@ -116,7 +116,7 @@ fun PastWeatherApp(
             }
             AdmobBanner(
                 modifier = Modifier
-                    .height(120.dp)
+                    .height(100.dp)
                     .fillMaxWidth()
             )
         }

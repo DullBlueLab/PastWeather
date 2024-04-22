@@ -37,26 +37,23 @@ class PeakDataCsv(private val context: Context): CsvDataFile(context, PEAK_DATA_
         }
     }
 
-    suspend fun loadMatches(point: String, month: Int, day: Int): Table? {
+    fun loadMatches(point: String, month: Int, day: Int): Table? {
         var matches: Table? = null
+        val name = "$PEAK_DATA_FILE_NAME_TOP$point.csv"
+        val stream = File(context.filesDir, name).inputStream()
+        val reader = stream.reader()
+        var head = ""
 
-        withContext(Dispatchers.IO) {
-            val name = "$PEAK_DATA_FILE_NAME_TOP$point.csv"
-            val stream = File(context.filesDir, name).inputStream()
-            val reader = stream.reader()
-            var head = ""
-
-            reader.forEachLine { line ->
-                if (head.isEmpty()) head = line
-                else {
-                    val item = Table.convert(line)
-                    if (item.month == month && item.day == day) {
-                        matches = item
-                    }
+        reader.forEachLine { line ->
+            if (head.isEmpty()) head = line
+            else {
+                val item = Table.convert(line)
+                if (item.month == month && item.day == day) {
+                    matches = item
                 }
             }
-            stream.close()
         }
+        stream.close()
 
         return matches
     }

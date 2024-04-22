@@ -14,24 +14,20 @@ open class CsvDataFile(
     private val fileNameTop: String
 ) {
 
-    suspend fun download(point: String) {
-        withContext(Dispatchers.IO) {
-            val name = "$fileNameTop$point.csv"
-            val url = URL("$BASE_URL$DATA_PATH$name")
-            val input = url.openConnection().getInputStream()
-            val output = File(context.filesDir, name).outputStream()
+    fun download(point: String) {
+        val name = "$fileNameTop$point.csv"
+        val url = URL("$BASE_URL$DATA_PATH$name")
+        val input = url.openConnection().getInputStream()
+        val output = File(context.filesDir, name).outputStream()
 
-            output.write(input.readBytes())
+        output.write(input.readBytes())
 
-            output.close()
-            input.close()
-        }
+        output.close()
+        input.close()
     }
 
-    suspend fun deleteFile(point: String) {
-        withContext(Dispatchers.IO) {
-            val name = "$fileNameTop$point.csv"
-            File(context.filesDir, name).delete()
-        }
+    fun deleteFile(point: String) {
+        val name = "$fileNameTop$point.csv"
+        File(context.filesDir, name).delete()
     }
 }

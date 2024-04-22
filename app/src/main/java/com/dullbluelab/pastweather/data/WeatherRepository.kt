@@ -9,10 +9,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class WeatherRepository(database: WeatherDatabase, context: Context) {
+class WeatherRepository(database: WeatherDatabase, private val context: Context) {
     private val dailyWeatherDao: DailyWeatherDao = database.dailyWeatherDao()
     private val averageWeatherDao: AverageWeatherDao = database.averageWeatherDao()
     private val locationDao: LocationListDao = database.locationListDao()
+
+    private val directory: DirectoryData = DirectoryData()
 
     private val weatherData: WeatherDataCsv = WeatherDataCsv(context)
     private val averageData: AverageDataCsv = AverageDataCsv(context)
@@ -76,11 +78,7 @@ class WeatherRepository(database: WeatherDatabase, context: Context) {
     fun getAllLocation(): Flow<List<LocationTable>> = locationDao.getAll()
     private fun getLocationItem(code: String): Flow<LocationTable?> = locationDao.getItem(code)
 
-    suspend fun clearLocationList() {
-        withContext(Dispatchers.IO) {
-            locationDao.deleteAll()
-        }
-    }
+    suspend fun clearLocationList() { locationDao.deleteAll() }
 
     private fun updateDownloadFlag(code: String, flag: Boolean) {
         val scope = CoroutineScope(Job() + Dispatchers.Default)
@@ -103,10 +101,12 @@ class WeatherRepository(database: WeatherDatabase, context: Context) {
         }
     }
 
-    suspend fun cleanupPrevData() {
-        withContext(Dispatchers.Default) {
-            dailyWeatherDao.deleteAll()
-            averageWeatherDao.deleteAll()
-        }
+    fun cleanupPrevData() {
+        dailyWeatherDao.deleteAll()
+        averageWeatherDao.deleteAll()
+    }
+
+    suspend fun loadDirectory(): DirectoryData.Table? {
+        return directory.load(context.resources)
     }
 }

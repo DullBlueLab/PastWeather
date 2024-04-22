@@ -34,24 +34,21 @@ class AverageDataCsv(private val context: Context)
 
     suspend fun loadMatches(point: String, month: Int, day: Int): List<Table> {
         val matches = mutableListOf<Table>()
+        val name = "$AVERAGE_DATA_FILE_NAME_TOP$point.csv"
+        val stream = File(context.filesDir, name).inputStream()
+        val reader = stream.reader()
+        var head = ""
 
-        withContext(Dispatchers.IO) {
-            val name = "$AVERAGE_DATA_FILE_NAME_TOP$point.csv"
-            val stream = File(context.filesDir, name).inputStream()
-            val reader = stream.reader()
-            var head = ""
-
-            reader.forEachLine { line ->
-                if (head.isEmpty()) head = line
-                else {
-                    val item = Table.convert(line)
-                    if (item.month == month && item.day == day) {
-                        matches.add(item)
-                    }
+        reader.forEachLine { line ->
+            if (head.isEmpty()) head = line
+            else {
+                val item = Table.convert(line)
+                if (item.month == month && item.day == day) {
+                    matches.add(item)
                 }
             }
-            stream.close()
         }
+        stream.close()
 
         return matches.toList()
     }

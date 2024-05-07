@@ -12,8 +12,8 @@ android {
         applicationId = "com.dullbluelab.pastweather"
         minSdk = 26
         targetSdk = 34
-        versionCode = 13
-        versionName = "1.12"
+        versionCode = 14
+        versionName = "1.13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -64,10 +64,11 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.0")
 
     implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
     implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
+    implementation("com.google.firebase:protolite-well-known-types:18.0.0")
     ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")

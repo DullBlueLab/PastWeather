@@ -24,6 +24,7 @@ class WeatherRepository(database: WeatherDatabase, private val context: Context)
     var averageList: List<AverageDataCsv.Table> = listOf()
     var peakItem: PeakDataCsv.Table? = null
     val recentAverage: RecentAverageData = RecentAverageData()
+    val skyCount: SkyCount = SkyCount()
 
     suspend fun download(point: String) {
         weatherData.download(point)
@@ -37,6 +38,7 @@ class WeatherRepository(database: WeatherDatabase, private val context: Context)
         averageList = averageData.loadMatches(point, month, day)
         peakItem = peakData.loadMatches(point, month, day)
         recentAverage.calculate(weatherList)
+        skyCount.calculate(weatherList)
     }
 
     fun getWeatherItem(year: Int): WeatherDataCsv.Table? {

@@ -43,6 +43,7 @@ fun FinderPanel(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.finderUi.collectAsState()
+    val today = "${uiState.selectMonth}/${uiState.selectDay}"
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -71,10 +72,15 @@ fun FinderPanel(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
         ) {
-            Text(
-                text = stringResource(id = R.string.label_today),
-                modifier = Modifier.padding(8.dp)
-            )
+            TextButton(
+                onClick = { viewModel.inputDay(true) },
+                modifier = Modifier.height(48.dp).padding(8.dp)
+            ) {
+                Text(
+                    text = today,
+                    fontSize = 18.sp
+                )
+            }
             FindYearPicker(viewModel) { value ->
                 onChangeYear(value)
             }
@@ -122,6 +128,26 @@ fun FinderPanel(
                 .height(400.dp)
                 .fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(48.dp))
+
+        Text(
+            text = stringResource(id = R.string.text_sunny_count),
+            modifier = Modifier.padding(8.dp)
+        )
+        Text(
+            text = uiState.sunnyCount.toString(),
+            fontSize = 36.sp
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = stringResource(id = R.string.text_rainy_count),
+            modifier = Modifier.padding(8.dp)
+        )
+        Text(
+            text = uiState.rainyCount.toString(),
+            fontSize = 36.sp
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

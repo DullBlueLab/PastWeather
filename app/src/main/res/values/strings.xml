@@ -41,4 +41,6 @@
     <string name="text_low_record">Low record</string>
     <string name="tag_peak">Peak</string>
     <string name="text_recent_temp">Average temperature for the last 20 years</string>
+    <string name="text_sunny_count">Sunny days in the last 20 years</string>
+    <string name="text_rainy_count">Rainy days in the last 20 years</string>
 </resources>

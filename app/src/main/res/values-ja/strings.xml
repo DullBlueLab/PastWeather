@@ -41,4 +41,6 @@
     <string name="tag_peak">Peak</string>
     <string name="text_recent_temp">直近20年の平均気温</string>
     <string name="text_low_temp">Low temp</string>
+    <string name="text_sunny_count">直近20年の晴れの日</string>
+    <string name="text_rainy_count">直近20年の雨の日</string>
 </resources>

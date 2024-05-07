@@ -14,9 +14,14 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -84,6 +89,10 @@ fun WeatherScreen(
             )
 
         }
+
+    }
+    if (routeUi.isInputDay) {
+        WeatherDatePicker(viewModel)
     }
 }
 
@@ -169,5 +178,37 @@ fun TagPager(
         ) { page ->
             pageList[page]()
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WeatherDatePicker(viewModel: PastWeatherViewModel) {
+    val dateState = rememberDatePickerState()
+
+    DatePickerDialog(
+        onDismissRequest = {
+            viewModel.inputDay(false)
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    viewModel.changeDate(dateState.selectedDateMillis)
+                }
+            ) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    viewModel.inputDay(false)
+                }
+            ) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        DatePicker(state = dateState)
     }
 }

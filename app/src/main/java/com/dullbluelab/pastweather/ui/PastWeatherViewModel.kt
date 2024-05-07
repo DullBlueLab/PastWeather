@@ -11,6 +11,7 @@ import com.dullbluelab.pastweather.R
 import com.dullbluelab.pastweather.data.AverageDataCsv
 import com.dullbluelab.pastweather.data.LocationTable
 import com.dullbluelab.pastweather.data.PeakDataCsv
+import com.dullbluelab.pastweather.data.SkyCount
 import com.dullbluelab.pastweather.data.UserPreferencesData
 import com.dullbluelab.pastweather.data.UserPreferencesRepository
 import com.dullbluelab.pastweather.data.WeatherDataCsv
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.util.Date
 
 private const val TAG = "PastWeatherViewModel"
 
@@ -37,7 +39,8 @@ class PastWeatherViewModel(
         val route: String = "Weather",
         val mode: String = "start", // or "point", "finder", "graph", "average"
         val point: String = "",
-        val messageId: Int = 0
+        val messageId: Int = 0,
+        val isInputDay: Boolean = false
     )
     private val _routeUi = MutableStateFlow(RouteUiState())
     val routeUi: StateFlow<RouteUiState> = _routeUi.asStateFlow()
@@ -52,7 +55,9 @@ class PastWeatherViewModel(
         val lowTemp: Double = 0.0,
         val highTemp: Double = 0.0,
         val sky: String = "",
-        val tempList: List<GraphTempItem> = listOf()
+        val tempList: List<GraphTempItem> = listOf(),
+        val sunnyCount: Int = 0,
+        val rainyCount: Int = 0
     )
     private val _finderUi = MutableStateFlow(FinderUiState())
     val finderUi: StateFlow<FinderUiState> = _finderUi.asStateFlow()
@@ -331,7 +336,7 @@ class PastWeatherViewModel(
         if (year == 0) return
         try {
             val item = repositories.getWeatherItem(year)
-            item?.let { updateFinderUi(currentPointCode, item) }
+            item?.let { updateFinderUi(currentPointCode, item, repositories.skyCount) }
         }
         catch (e: Exception) {
             Log.e(TAG, e.message, e)
@@ -356,7 +361,7 @@ class PastWeatherViewModel(
         }
     }
 
-    private fun updateFinderUi(point: String, table: WeatherDataCsv.Table) {
+    private fun updateFinderUi(point: String, table: WeatherDataCsv.Table, count: SkyCount) {
         val location = getLocationItem(point)
         _finderUi.update { state ->
             state.copy(
@@ -366,7 +371,9 @@ class PastWeatherViewModel(
                 selectDay = table.day,
                 highTemp = table.high,
                 lowTemp = table.low,
-                sky = table.sky
+                sky = table.sky,
+                sunnyCount = count.sunny,
+                rainyCount = count.rainy
             )
         }
     }
@@ -518,6 +525,63 @@ class PastWeatherViewModel(
             }
         }
     }
+
+    fun inputDay(flag: Boolean) {
+        _routeUi.update { state ->
+            state.copy(
+                isInputDay = flag
+            )
+        }
+    }
+
+    fun changeDate(dateMillis: Long?) {
+        try {
+            inputDay(false)
+            if (dateMillis != null) {
+                val year = LocalDate.now().year
+                val date = Date(dateMillis).toString()
+                val month = monthValue(date.substring(4, 7)) ?: 1
+                val day = date.substring(8, 10).toInt()
+                today = LocalDate.of(year, month, day)
+
+                updateMode("start", R.string.text_collect_data)
+
+                viewModelScope.launch {
+                    repositories.loadData(
+                        currentPointCode,
+                        today.monthValue,
+                        today.dayOfMonth
+                    )
+
+                    updateGraphData()
+                    updateAverage()
+                    updatePeakData()
+                    updateWeather(currentYear)
+
+                    updateMode("finder")
+                }
+            }
+        } catch(e: Exception) {
+            Log.e(TAG, e.message, e)
+        }
+    }
+
+    private fun monthValue(tag: String): Int? = monthValueMap[tag]
+
+    private val monthValueMap: Map<String, Int> = mapOf(
+        "Jan" to 1,
+        "Feb" to 2,
+        "Mar" to 3,
+        "Apr" to 4,
+        "May" to 5,
+        "Jun" to 6,
+        "Jul" to 7,
+        "Aug" to 8,
+        "Sep" to 9,
+        "Oct" to 10,
+        "Nov" to 11,
+        "Dec" to 12
+    )
 
     //
     // LocationScreen

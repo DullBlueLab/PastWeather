@@ -145,22 +145,27 @@ class PastWeatherViewModel(
                                 setupDirectory()
                             }
                             updateMode("point")
+                            cancel()
                         }
 
                         "1" -> {
                             updateMode("start", R.string.text_update_data)
                             val point = data.selectPoint
-                            reloadCsvData()
                             setupPreference()
-                            changeSelectPoint(point)
+                            reloadCsvData {
+                                changeSelectPoint(point)
+                                cancel()
+                            }
                         }
 
                         "2" -> {
                             updateMode("start", R.string.text_add_download)
                             val point = data.selectPoint
-                            appendPeekDataCsv()
                             setupPreference()
-                            changeSelectPoint(point)
+                            appendPeekDataCsv {
+                                changeSelectPoint(point)
+                                cancel()
+                            }
                         }
 
                         else -> {
@@ -169,10 +174,10 @@ class PastWeatherViewModel(
                             if (data.selectPoint.isEmpty()) {
                                 updateMode("point")
                             }
+                            cancel()
                         }
                     }
 
-                    cancel()
                 }
 
             } catch (e: Exception) {
@@ -181,18 +186,20 @@ class PastWeatherViewModel(
         }
     }
 
-    private suspend fun reloadCsvData() {
+    private suspend fun reloadCsvData(done: () -> Unit) {
         repositories.cleanupPrevData()
         val stream = repositories.getAllLocation()
         stream.collect { list ->
             repositories.reloadWeatherCsv(list)
+            done()
         }
     }
 
-    private suspend fun appendPeekDataCsv() {
+    private suspend fun appendPeekDataCsv(done: () -> Unit) {
         val stream = repositories.getAllLocation()
         stream.collect { list ->
             repositories.appendPeakDataCsv(list)
+            done()
         }
     }
 

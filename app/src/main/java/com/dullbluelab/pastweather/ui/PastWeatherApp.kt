@@ -18,6 +18,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,7 +46,7 @@ enum class PastWeatherScreen {
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun PastWeatherApp(
     activity: MainActivity,
@@ -52,6 +55,7 @@ fun PastWeatherApp(
 ) {
     val navController: NavHostController = rememberNavController()
     val state by viewModel.routeUi.collectAsState()
+    val windowSizeClass = calculateWindowSizeClass(activity = activity)
 
     if (activity.destinationListener == null) {
         activity.destinationListener = DestinationListener(viewModel)
@@ -85,13 +89,26 @@ fun PastWeatherApp(
                     .fillMaxWidth()
             ) {
                 composable(route = PastWeatherScreen.Weather.name) {
-                    WeatherScreen(
-                        onChangeYear = { value -> viewModel.changeYear(value) },
-                        onLocation = {
-                            navController.navigate(PastWeatherScreen.Location.name)
-                        },
-                        viewModel = viewModel,
-                    )
+                    when (windowSizeClass.widthSizeClass) {
+                        WindowWidthSizeClass.Expanded -> {
+                            WeatherWideScreen(
+                                onChangeYear = { value -> viewModel.changeYear(value) },
+                                onLocation = {
+                                    navController.navigate(PastWeatherScreen.Location.name)
+                                },
+                                viewModel = viewModel,
+                            )
+                        }
+                        else -> {
+                            WeatherScreen(
+                                onChangeYear = { value -> viewModel.changeYear(value) },
+                                onLocation = {
+                                    navController.navigate(PastWeatherScreen.Location.name)
+                                },
+                                viewModel = viewModel,
+                            )
+                        }
+                    }
                 }
                 composable(route = PastWeatherScreen.Location.name) {
                     LocationScreen(

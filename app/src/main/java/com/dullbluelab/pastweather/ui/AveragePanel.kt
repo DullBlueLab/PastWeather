@@ -31,8 +31,7 @@ fun AveragePanel(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
+        modifier = modifier.verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(32.dp))
 

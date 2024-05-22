@@ -97,7 +97,7 @@ fun WeatherScreen(
 }
 
 @Composable
-private fun StartDownload(
+fun StartDownload(
     onLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -115,7 +115,7 @@ private fun StartDownload(
 }
 
 @Composable
-private fun StartPanel(
+fun StartPanel(
     state: PastWeatherViewModel.RouteUiState,
     modifier: Modifier = Modifier
 ) {
@@ -183,7 +183,7 @@ fun TagPager(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun WeatherDatePicker(viewModel: PastWeatherViewModel) {
+fun WeatherDatePicker(viewModel: PastWeatherViewModel) {
     val dateState = rememberDatePickerState()
 
     DatePickerDialog(

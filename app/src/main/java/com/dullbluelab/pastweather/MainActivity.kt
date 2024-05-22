@@ -2,10 +2,12 @@ package com.dullbluelab.pastweather
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,15 +21,13 @@ class MainActivity : ComponentActivity() {
 
     var destinationListener: DestinationListener? = null
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val homepageUrl = getString(R.string.homepage_url)
 
         MobileAds.initialize(this) {}
-        /*MobileAds.setRequestConfiguration(
-            RequestConfiguration.Builder().setTestDeviceIds(listOf("ABCDEF012345")).build()
-        )*/
         setContent {
             PastWeatherTheme {
                 // A surface container using the 'background' color from the theme

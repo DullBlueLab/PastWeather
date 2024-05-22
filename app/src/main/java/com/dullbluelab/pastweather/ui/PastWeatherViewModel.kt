@@ -57,7 +57,8 @@ class PastWeatherViewModel(
         val sky: String = "",
         val tempList: List<GraphTempItem> = listOf(),
         val sunnyCount: Int = 0,
-        val rainyCount: Int = 0
+        val rainyCount: Int = 0,
+        val clearSkyCount: Int = 0
     )
     private val _finderUi = MutableStateFlow(FinderUiState())
     val finderUi: StateFlow<FinderUiState> = _finderUi.asStateFlow()
@@ -373,7 +374,8 @@ class PastWeatherViewModel(
                 lowTemp = table.low,
                 sky = table.sky,
                 sunnyCount = count.sunny,
-                rainyCount = count.rainy
+                rainyCount = count.rainy,
+                clearSkyCount = count.clearSkies
             )
         }
     }

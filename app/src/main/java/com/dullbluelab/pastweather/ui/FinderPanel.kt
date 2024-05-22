@@ -130,6 +130,17 @@ fun FinderPanel(
         )
         Spacer(modifier = Modifier.height(48.dp))
 
+        if (uiState.clearSkyCount > 0) {
+            Text(
+                text = stringResource(id = R.string.text_clear_skies_count),
+                modifier = Modifier.padding(8.dp)
+            )
+            Text(
+                text = uiState.clearSkyCount.toString(),
+                fontSize = 36.sp
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
         Text(
             text = stringResource(id = R.string.text_sunny_count),
             modifier = Modifier.padding(8.dp)

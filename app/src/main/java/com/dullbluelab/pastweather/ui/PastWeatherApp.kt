@@ -57,7 +57,7 @@ fun PastWeatherApp(
     val navController: NavHostController = rememberNavController()
     val state by viewModel.routeUi.collectAsState()
     val windowSizeClass = calculateWindowSizeClass(activity = activity)
-    val textClearData = stringResource(id = R.string.text_clear_data)
+    val textClearData = stringResource(id = R.string.text_success_reset)
 
     if (activity.destinationListener == null) {
         activity.destinationListener = DestinationListener(viewModel)

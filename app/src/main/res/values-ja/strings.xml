@@ -45,6 +45,7 @@
     <string name="text_rainy_count">直近20年の雨のある日</string>
     <string name="text_clear_skies_count">直近20年の快晴の日</string>
     <string name="name_info">Info</string>
+    <string name="name_tool">Tool</string>
     <string name="text_clear_data">データと設定をクリアします</string>
     <string name="name_clear">Clear</string>
     <string name="text_success_reset">データの初期化に成功しました</string>

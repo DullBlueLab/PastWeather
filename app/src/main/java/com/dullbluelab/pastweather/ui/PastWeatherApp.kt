@@ -2,6 +2,7 @@ package com.dullbluelab.pastweather.ui
 
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,7 +44,7 @@ import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 
 enum class PastWeatherScreen {
-    Weather, Info, Location, Download
+    Weather, Aside, Location, Download
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -56,6 +58,7 @@ fun PastWeatherApp(
     val navController: NavHostController = rememberNavController()
     val state by viewModel.routeUi.collectAsState()
     val windowSizeClass = calculateWindowSizeClass(activity = activity)
+    val textClearData = stringResource(id = R.string.text_clear_data)
 
     if (activity.destinationListener == null) {
         activity.destinationListener = DestinationListener(viewModel)
@@ -71,7 +74,7 @@ fun PastWeatherApp(
                     navController.navigateUp()
                 },
                 onInfoButtonClicked = {
-                    navController.navigate(PastWeatherScreen.Info.name)
+                    navController.navigate(PastWeatherScreen.Aside.name)
                 },
             )
         }
@@ -119,9 +122,15 @@ fun PastWeatherApp(
                         viewModel = viewModel
                     )
                 }
-                composable(route = PastWeatherScreen.Info.name) {
+                composable(route = PastWeatherScreen.Aside.name) {
                     InfoScreen(
-                        openHomepage = openHomepage
+                        openHomepage = openHomepage,
+                        resetData = { viewModel.resetData { message ->
+                            if (message == "success") {
+                                Toast.makeText(activity, textClearData, Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        } }
                     )
                 }
                 composable(route = PastWeatherScreen.Download.name) {
@@ -177,7 +186,7 @@ fun PastWeatherTopAppBar(
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Info,
+                        imageVector = Icons.Filled.Menu,
                         contentDescription = stringResource(id = R.string.button_info)
                     )
                 }

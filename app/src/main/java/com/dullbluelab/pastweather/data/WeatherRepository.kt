@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class WeatherRepository(database: WeatherDatabase, private val context: Context) {
+class WeatherRepository(private val database: WeatherDatabase, private val context: Context) {
     private val dailyWeatherDao: DailyWeatherDao = database.dailyWeatherDao()
     private val averageWeatherDao: AverageWeatherDao = database.averageWeatherDao()
     private val locationDao: LocationListDao = database.locationListDao()
@@ -25,6 +25,10 @@ class WeatherRepository(database: WeatherDatabase, private val context: Context)
     var peakItem: PeakDataCsv.Table? = null
     val recentAverage: RecentAverageData = RecentAverageData()
     val skyCount: SkyCount = SkyCount()
+
+    private suspend fun clearDatabase() {
+        withContext(Dispatchers.IO) { database.clearAllTables() }
+    }
 
     suspend fun download(point: String) {
         weatherData.download(point)
@@ -109,5 +113,18 @@ class WeatherRepository(database: WeatherDatabase, private val context: Context)
 
     suspend fun loadDirectory(): DirectoryData.Table? {
         return directory.load(context.resources)
+    }
+
+    suspend fun clearAllData() {
+        clearDatabase()
+        deleteAllDataFiles()
+    }
+
+    private suspend fun deleteAllDataFiles() {
+        withContext(Dispatchers.IO) {
+            context.filesDir.listFiles()?.forEach { file ->
+                file.delete()
+            }
+        }
     }
 }

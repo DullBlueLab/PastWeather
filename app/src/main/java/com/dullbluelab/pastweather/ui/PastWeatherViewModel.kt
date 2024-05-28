@@ -464,6 +464,21 @@ class PastWeatherViewModel(
         }
     }
 
+    fun resetData(done: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                repositories.clearAllData()
+                preferences.clearData()
+                setupDirectory()
+                updateMode("point")
+                done("success")
+            } catch (e: Exception) {
+                Log.e(TAG, e.message, e)
+                done("failed")
+            }
+        }
+    }
+
     //
     // LocationUi
 

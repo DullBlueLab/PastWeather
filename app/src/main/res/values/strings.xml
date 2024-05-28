@@ -44,4 +44,9 @@
     <string name="text_sunny_count">Sunny in the last 20 years</string>
     <string name="text_rainy_count">Rainy in the last 20 years</string>
     <string name="text_clear_skies_count">clear skies in the last 20 years</string>
+    <string name="name_info">Info</string>
+    <string name="name_tool">Tool</string>
+    <string name="text_clear_data">Clear data and settings</string>
+    <string name="name_clear">Clear</string>
+    <string name="text_success_reset">Data initialization succeeded</string>
 </resources>

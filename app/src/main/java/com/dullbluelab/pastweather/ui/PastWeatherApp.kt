@@ -7,7 +7,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -27,8 +26,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
@@ -38,12 +35,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.dullbluelab.pastweather.MainActivity
 import com.dullbluelab.pastweather.R
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
 
 enum class PastWeatherScreen {
-    Weather, Aside, Location, Download
+    Weather, Aside, Location
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -114,10 +108,7 @@ fun PastWeatherApp(
                 }
                 composable(route = PastWeatherScreen.Location.name) {
                     LocationScreen(
-                        showDownload = {
-                            val route = PastWeatherScreen.Download.name
-                            navController.navigate(route)
-                        },
+                        selectLocation = { code -> viewModel.changeLocation(code) },
                         viewModel = viewModel
                     )
                 }
@@ -132,18 +123,7 @@ fun PastWeatherApp(
                         } }
                     )
                 }
-                composable(route = PastWeatherScreen.Download.name) {
-                    DownloadScreen(
-                        finish = { navController.navigateUp() },
-                        viewModel = viewModel
-                    )
-                }
             }
-            AdmobBanner(
-                modifier = Modifier
-                    .height(100.dp)
-                    .fillMaxWidth()
-            )
         }
     }
 }
@@ -207,26 +187,4 @@ class DestinationListener(
         val route = destination.route ?: "Weather"
         viewModel.updateRoute(route)
     }
-}
-
-@Composable
-fun  AdmobBanner(
-    modifier: Modifier = Modifier
-) {
-    AndroidView(
-        modifier = modifier.fillMaxSize(),
-        factory = { context ->
-            AdView(context).apply {
-                // 下の行で広告ビューを指定します。広告サイズ
-                //adSize = AdSize.BANNER
-                // 下の行で広告ユニット ID を指定
-                // 現在追加されているテスト広告ユニット ID。
-                setAdSize(AdSize.BANNER)
-                // adUnitId = "ca-app-pub-3940256099942544/9214589741" // test
-                adUnitId = "ca-app-pub-5155739412996974/5785915157"
-                // 呼び出し広告を読み込んで広告を読み込みます。
-                loadAd(AdRequest.Builder().build())
-            }
-        }
-    )
 }

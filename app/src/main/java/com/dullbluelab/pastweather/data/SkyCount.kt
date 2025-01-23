@@ -17,9 +17,9 @@ class SkyCount {
         clearSkies = 0
     }
 
-    fun calculate(weatherList: List<WeatherDataCsv.Table>) {
+    fun calculate(weatherData: List<WeatherData>) {
         clear()
-        weatherList.forEach { data ->
+        weatherData.forEach { data ->
             if (data.year in START_YEAR..END_YEAR) {
                 if (data.sky.contains(SUNNY_CHAR)) {
                     sunny ++

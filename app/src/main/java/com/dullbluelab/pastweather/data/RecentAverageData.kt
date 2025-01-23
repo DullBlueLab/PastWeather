@@ -8,12 +8,12 @@ class RecentAverageData {
     var highTemp: Double = 0.0
     var lowTemp: Double = 0.0
 
-    fun calculate(weatherList: List<WeatherDataCsv.Table>) {
+    fun calculate(weatherData: List<WeatherData>) {
         var high = 0.0
         var low = 0.0
         var count = 0
 
-        weatherList.forEach { data ->
+        weatherData.forEach { data ->
             if (data.year in START_YEAR..END_YEAR) {
                 high += data.high
                 low += data.low

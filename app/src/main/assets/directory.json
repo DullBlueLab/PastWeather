@@ -1,0 +1,14 @@
+{
+    "version": "4",
+    "update": "2025-01-31",
+    "maxyear": "2024",
+    "minyear": "2000",
+    "points": [
+        { "code": "tky", "name": "東京" },
+        { "code": "osk", "name": "大阪" },
+        { "code": "fko", "name": "福岡" },
+        { "code": "sdi", "name": "仙台" },
+        { "code": "spr", "name": "札幌" },
+        { "code": "ngt", "name": "新潟" }
+    ]
+}

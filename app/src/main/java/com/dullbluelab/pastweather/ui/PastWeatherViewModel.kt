@@ -8,15 +8,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.dullbluelab.pastweather.PastWeatherApplication
 import com.dullbluelab.pastweather.R
-import com.dullbluelab.pastweather.data.AverageDataCsv
-import com.dullbluelab.pastweather.data.LocationTable
-import com.dullbluelab.pastweather.data.PeakDataCsv
+import com.dullbluelab.pastweather.data.AverageData
+import com.dullbluelab.pastweather.data.LocationData
+import com.dullbluelab.pastweather.data.PeakData
 import com.dullbluelab.pastweather.data.SkyCount
 import com.dullbluelab.pastweather.data.UserPreferencesData
 import com.dullbluelab.pastweather.data.UserPreferencesRepository
-import com.dullbluelab.pastweather.data.WeatherDataCsv
+import com.dullbluelab.pastweather.data.WeatherData
 import com.dullbluelab.pastweather.data.WeatherRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.util.Date
 
@@ -78,39 +76,24 @@ class PastWeatherViewModel(
 
     data class PeakUiState(
         val pointName: String = "",
-        val data: PeakDataCsv.Table? = null
+        val data: List<PeakData> = listOf()
     )
     private val _peakUi = MutableStateFlow(PeakUiState())
     val peakUi: StateFlow<PeakUiState> = _peakUi.asStateFlow()
 
     data class LocationUiState(
         val pointCode: String = "",
-        val entryList: List<LocationTable> = listOf(),
-        val otherList: List<LocationTable> = listOf(),
+        val list: List<LocationData> = listOf()
     )
     private val _locationUi = MutableStateFlow(LocationUiState())
     val locationUi: StateFlow<LocationUiState> = _locationUi.asStateFlow()
 
-    data class DownloadUiState(
-        val status: String = "standby", // or "download", "failed", "cancel", "success"
-        val progressCount: Int = 0,
-        val message: String = ""
-    )
-    private val _downloadUi = MutableStateFlow(DownloadUiState())
-    val downloadUi: StateFlow<DownloadUiState> = _downloadUi.asStateFlow()
-
-    private val locationStream: Flow<List<LocationTable>> = repositories.getAllLocation()
     private val preferenceStream: Flow<UserPreferencesData> = preferences.data
-
     private var preferencesData: UserPreferencesData? = null
-    private var locationList: List<LocationTable>? = null
 
     private var currentPointCode: String = ""
     private var currentYear: Int = 0
 
-    var selectLocationItem: LocationTable? = null
-    private var downloadItem: LocationTable? = null
-    private var downloadCancelFlag: Boolean = false
     private var graphList: MutableList<GraphTempItem> = mutableListOf()
 
     private var today: LocalDate = LocalDate.now()
@@ -130,128 +113,53 @@ class PastWeatherViewModel(
     // init
 
     init {
-        versionSetting()
-        chainFlowPipe()
-    }
-
-    private fun versionSetting() {
         viewModelScope.launch {
             try {
+                repositories.loadDirectory()
                 preferenceStream.collect { data ->
                     when (data.dataVersion) {
                         "0" -> {
                             updateMode("start", R.string.text_startup)
-                            if (preferencesData == null) {
-                                setupDirectory()
-                            }
-                            updateMode("point")
-                            cancel()
+                            setupPreference()
                         }
 
-                        "1" -> {
+                        "1", "2", "3" -> {
                             updateMode("start", R.string.text_update_data)
-                            val point = data.selectPoint
+                            repositories.clearRecentData()
+                            preferences.clearData()
                             setupPreference()
-                            reloadCsvData {
-                                changeSelectPoint(point)
-                                cancel()
-                            }
-                        }
-
-                        "2" -> {
-                            updateMode("start", R.string.text_add_download)
-                            val point = data.selectPoint
-                            setupPreference()
-                            appendPeekDataCsv {
-                                changeSelectPoint(point)
-                                cancel()
-                            }
-                        }
-
-                        else -> {
-                            updateMode("start", R.string.text_collect_data)
-                            updatePreference(data)
-                            if (data.selectPoint.isEmpty()) {
-                                updateMode("point")
-                            }
-                            cancel()
                         }
                     }
-
+                    updateLocation(repositories.getAllLocation())
+                    cancel()
                 }
 
             } catch (e: Exception) {
                 Log.e(TAG, e.message, e)
             }
         }
-    }
-
-    private suspend fun reloadCsvData(done: () -> Unit) {
-        repositories.cleanupPrevData()
-        val stream = repositories.getAllLocation()
-        stream.collect { list ->
-            repositories.reloadWeatherCsv(list)
-            done()
-        }
-    }
-
-    private suspend fun appendPeekDataCsv(done: () -> Unit) {
-        val stream = repositories.getAllLocation()
-        stream.collect { list ->
-            repositories.appendPeakDataCsv(list)
-            done()
-        }
-    }
-
-    private suspend fun setupDirectory() {
-        val data = withContext(Dispatchers.IO) { repositories.loadDirectory() }
-        data?.let {
-            preferences.saveInitial(data)
-            repositories.updateLocationList(data.points)
-
-            val item = UserPreferencesData(
-                maxYear = data.maxyear.toInt(),
-                minYear = data.minyear.toInt(),
-                dataVersion = data.version
-            )
-            updatePreference(item)
-        }
+        chainFlowPipe()
     }
 
     private suspend fun setupPreference() {
-        val data = withContext(Dispatchers.IO) { repositories.loadDirectory() }
+        val data = repositories.getDirectory()
         data?.let {
             preferences.saveInitial(data)
-            val item = UserPreferencesData(
-                maxYear = data.maxyear.toInt(),
-                minYear = data.minyear.toInt(),
-                dataVersion = data.version
-            )
-            updatePreference(item)
         }
     }
 
     private fun chainFlowPipe() {
         viewModelScope.launch {
-            locationStream.collect { list ->
-                updateLocation(list)
-            }
-        }
-        viewModelScope.launch {
             preferenceStream.collect { data ->
                 try {
-                    if (data.dataVersion == "3"
+                    if (data.dataVersion == "4"
                         && data.selectPoint.isNotEmpty() && data.selectYear != 0) {
                         var changed = false
                         preferencesData = data
 
                         if (currentPointCode != data.selectPoint) {
                             currentPointCode = data.selectPoint
-                            repositories.loadData(
-                                currentPointCode,
-                                today.monthValue,
-                                today.dayOfMonth
-                            )
+                            repositories.loadMatches(currentPointCode, today.monthValue, today.dayOfMonth)
                             setsPointName(currentPointCode)
                             updatePointCodeUi(currentPointCode)
 
@@ -277,17 +185,8 @@ class PastWeatherViewModel(
         }
     }
 
-    private fun updateLocation(list: List<LocationTable>) {
-        locationList = list
-        val entries = mutableListOf<LocationTable>()
-        val others = mutableListOf<LocationTable>()
-
-        list.forEach { item ->
-            if (item.loaded) entries.add(item)
-            else others.add(item)
-        }
-        updateLocationListUi(entries.toList(), others.toList())
-
+    private fun updateLocation(list: List<LocationData>) {
+        updateLocationListUi(list)
         if (currentPointCode.isNotEmpty() && finderUi.value.pointName.isEmpty()) {
             setsPointName(currentPointCode)
         }
@@ -296,23 +195,14 @@ class PastWeatherViewModel(
     private fun updatePeakData() {
         _peakUi.update { state ->
             state.copy(
-                data = repositories.peakItem
-            )
-        }
-    }
-
-    private fun updatePreference(item: UserPreferencesData) {
-        _finderUi.update { state ->
-            state.copy(
-                maxYear = item.maxYear,
-                minYear = item.minYear
+                data = repositories.getPeakData()
             )
         }
     }
 
     private fun setsPointName(code: String = currentPointCode) {
         if (code.isEmpty()) return
-        val item = getLocationItem(code)
+        val item = repositories.getLocationItem(code)
         val name = item?.name ?: ""
         updatePointNameUi(name)
     }
@@ -369,8 +259,9 @@ class PastWeatherViewModel(
         }
     }
 
-    private fun updateFinderUi(point: String, table: WeatherDataCsv.Table, count: SkyCount) {
-        val location = getLocationItem(point)
+    private fun updateFinderUi(point: String, table: WeatherData, count: SkyCount) {
+        val directories = repositories.getDirectory()
+        val location = repositories.getLocationItem(point)
         _finderUi.update { state ->
             state.copy(
                 pointName = location?.name ?: "",
@@ -382,7 +273,9 @@ class PastWeatherViewModel(
                 sky = table.sky,
                 sunnyCount = count.sunny,
                 rainyCount = count.rainy,
-                clearSkyCount = count.clearSkies
+                clearSkyCount = count.clearSkies,
+                maxYear = directories?.maxyear?.toInt() ?: state.maxYear,
+                minYear = directories?.minyear?.toInt() ?: state.minYear,
             )
         }
     }
@@ -391,7 +284,7 @@ class PastWeatherViewModel(
         graphList = mutableListOf()
 
         viewModelScope.launch {
-            val list = repositories.weatherList
+            val list = repositories.getWeatherData()
             for (item in list) {
                 appendGraphItem(
                     graphList,
@@ -431,7 +324,7 @@ class PastWeatherViewModel(
         val lowTemp = repositories.recentAverage.lowTemp
 
         val point = currentPointCode
-        val list = repositories.averageList
+        val list = repositories.getAverageData()
         if (list.isNotEmpty()) {
             val sorted = list.sortedBy { it.years }
             val start = sorted[0].years
@@ -441,7 +334,7 @@ class PastWeatherViewModel(
     }
 
     private fun updateAverageUi(
-        list: List<AverageDataCsv.Table>,
+        list: List<AverageData>,
         start: String, end: String, point: String, month: Int, day: Int,
         highTemp: Double, lowTemp: Double
     ) {
@@ -449,7 +342,7 @@ class PastWeatherViewModel(
         list.forEach { item ->
             tempList.add(GraphTempItem(0, item.years, item.high, item.low))
         }
-        val location = getLocationItem(point)
+        val location = repositories.getLocationItem(point)
         _averageUi.update { state ->
             state.copy(
                 tempList = tempList,
@@ -467,10 +360,9 @@ class PastWeatherViewModel(
     fun resetData(done: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                repositories.clearAllData()
+                repositories.clearRecentData()
                 preferences.clearData()
-                setupDirectory()
-                updateMode("point")
+                setupPreference()
                 done("success")
             } catch (e: Exception) {
                 Log.e(TAG, e.message, e)
@@ -482,12 +374,10 @@ class PastWeatherViewModel(
     //
     // LocationUi
 
-    private fun updateLocationListUi(
-        entries: List<LocationTable>, others: List<LocationTable>) {
+    private fun updateLocationListUi(list: List<LocationData>) {
         _locationUi.update { state ->
             state.copy(
-                entryList = entries,
-                otherList = others
+                list = list
             )
         }
     }
@@ -506,45 +396,19 @@ class PastWeatherViewModel(
     }
 
     //
-    // DownloadUi
-
-    private fun updateDownloadStatusUi(mode: String, message: String = "") {
-        _downloadUi.update { state ->
-            state.copy(
-                status = mode,
-                message = message
-            )
-        }
-    }
-
-    //
-    // private var
-
-    private fun getLocationItem(code: String = currentPointCode): LocationTable? {
-        var result: LocationTable? = null
-        locationList?.let { list ->
-            for (item in list) {
-                if (item.code == code) {
-                    result = item
-                    break
-                }
-            }
-        }
-        return result
-    }
-
-    //
     // WeatherScreen
 
     fun changeYear(year: Int) {
-        preferencesData?.let { preference ->
-            if (preference.minYear <= year && year <= preference.maxYear) {
-                viewModelScope.launch {
-                    try {
-                        preferences.saveYear(year)
-                    } catch (e: Exception) {
-                        Log.e(TAG, e.message, e)
-                    }
+        val directory = repositories.getDirectory()
+        val minYear = directory?.minyear?.toInt() ?: 0
+        val maxYear = directory?.maxyear?.toInt() ?: 0
+
+        if (year in minYear..maxYear) {
+            viewModelScope.launch {
+                try {
+                    preferences.saveYear(year)
+                } catch (e: Exception) {
+                    Log.e(TAG, e.message, e)
                 }
             }
         }
@@ -571,11 +435,7 @@ class PastWeatherViewModel(
                 updateMode("start", R.string.text_collect_data)
 
                 viewModelScope.launch {
-                    repositories.loadData(
-                        currentPointCode,
-                        today.monthValue,
-                        today.dayOfMonth
-                    )
+                    repositories.loadMatches(currentPointCode, today.monthValue, today.dayOfMonth)
 
                     updateGraphData()
                     updateAverage()
@@ -610,7 +470,7 @@ class PastWeatherViewModel(
     //
     // LocationScreen
 
-    fun changeSelectPoint(code: String) {
+    fun changeLocation(code: String) {
         viewModelScope.launch {
             try {
                 preferences.savePoint(code)
@@ -618,46 +478,5 @@ class PastWeatherViewModel(
                 Log.e(TAG, e.message, e)
             }
         }
-    }
-
-    fun deleteDataAt(item: LocationTable) {
-        viewModelScope.launch {
-            try {
-                repositories.deleteAt(item.code)
-            } catch(e: Exception) {
-                Log.e(TAG, e.message, e)
-            }
-        }
-    }
-
-    //
-    // DownloadScreen
-
-    fun downloadWeatherData(
-        item: LocationTable,
-        failed: (String) -> Unit = {},
-        success: () -> Unit = {},
-    ) {
-        updateDownloadStatusUi("download")
-        downloadItem = item
-        downloadCancelFlag = false
-
-        viewModelScope.launch {
-            try {
-                repositories.download(item.code)
-                changeSelectPoint(item.code)
-                updateDownloadStatusUi("success")
-                success()
-            } catch (e: Exception) {
-                val mode = "failed"
-                val message = e.message ?: "Error:$TAG"
-                updateDownloadStatusUi(mode, message)
-                failed(message)
-            }
-        }
-    }
-
-    fun clearDownloadStatus() {
-        updateDownloadStatusUi("standby")
     }
 }

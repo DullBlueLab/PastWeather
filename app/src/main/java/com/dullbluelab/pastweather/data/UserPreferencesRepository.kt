@@ -14,10 +14,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.IOException
 
-private const val INITIAL_POINT = ""
-private const val INITIAL_YEAR = 2023
-private const val INITIAL_MAX_YEAR = 0
-private const val INITIAL_MIN_YEAR = 0
+private const val INITIAL_POINT = "tky"
+private const val INITIAL_YEAR = 2024
 private const val INITIAL_VERSION = "0"
 
 class UserPreferencesRepository(
@@ -26,8 +24,6 @@ class UserPreferencesRepository(
     private companion object {
         val SELECT_POINT = stringPreferencesKey("select_point")
         val SELECT_YEAR = intPreferencesKey("select_year")
-        val MAX_YEAR = intPreferencesKey("max_year")
-        val MIN_YEAR = intPreferencesKey("min_year")
         val DATA_VERSION = stringPreferencesKey("data_version")
         const val TAG = "UserPreferences"
     }
@@ -43,8 +39,6 @@ class UserPreferencesRepository(
             UserPreferencesData(
                 selectPoint = preferences[SELECT_POINT] ?: INITIAL_POINT,
                 selectYear =  preferences[SELECT_YEAR] ?: INITIAL_YEAR,
-                maxYear = preferences[MAX_YEAR] ?: INITIAL_MAX_YEAR,
-                minYear = preferences[MIN_YEAR] ?: INITIAL_MIN_YEAR,
                 dataVersion = preferences[DATA_VERSION] ?: INITIAL_VERSION
             )
         }
@@ -69,8 +63,6 @@ class UserPreferencesRepository(
         withContext(Dispatchers.IO) {
             dataStore.edit { preferences ->
                 preferences[DATA_VERSION] = data.version
-                preferences[MAX_YEAR] = data.maxyear.toInt()
-                preferences[MIN_YEAR] = data.minyear.toInt()
             }
         }
     }
@@ -87,7 +79,5 @@ class UserPreferencesRepository(
 data class UserPreferencesData(
     val selectPoint: String = INITIAL_POINT,
     val selectYear: Int = INITIAL_YEAR,
-    val maxYear: Int = INITIAL_MAX_YEAR,
-    val minYear: Int = INITIAL_MIN_YEAR,
     val dataVersion: String = INITIAL_VERSION
 )

@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dullbluelab.pastweather.R
-import com.dullbluelab.pastweather.data.PeakDataCsv
+import com.dullbluelab.pastweather.data.PeakData
 
 private const val HH = 0
 private const val HL = 1
@@ -33,9 +33,9 @@ fun PeakPanel(
 ) {
     val uiState by viewModel.peakUi.collectAsState()
 
-    uiState.data?.let { data ->
+    if (uiState.data.isNotEmpty()) {
 
-        if (data.years.size >= 4) {
+        uiState.data.forEach { data ->
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -63,7 +63,7 @@ fun PeakPanel(
 
 @Composable
 private fun PeakData(
-    data: PeakDataCsv.Table,
+    data: PeakData,
     modifier: Modifier
 ) {
     Column(

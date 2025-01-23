@@ -29,7 +29,7 @@
     <string name="text_ask_download_r">"の気象データを取得しますか？"</string>
     <string name="button_info">インフォメーション</string>
     <string name="error_browse">インターネットにアクセス出来ませんでした</string>
-    <string name="homepage_url">https://dullbluelab.nobushi.jp/index.html</string>
+    <string name="homepage_url">https://www.facebook.com/profile.php?id=61572438149103</string>
     <string name="item_year_picker">検索する年を選択</string>
     <string name="text_update_data">気象データを更新します</string>
     <string name="text_startup">初期設定をします</string>

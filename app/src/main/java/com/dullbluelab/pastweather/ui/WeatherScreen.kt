@@ -2,7 +2,6 @@ package com.dullbluelab.pastweather.ui
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -136,7 +135,6 @@ fun StartPanel(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TagPager(
     tagList: List<String>,

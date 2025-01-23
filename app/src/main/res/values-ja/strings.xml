@@ -29,6 +29,24 @@
     <string name="text_ask_download_r">"の気象データを取得しますか？"</string>
     <string name="button_info">インフォメーション</string>
     <string name="error_browse">インターネットにアクセス出来ませんでした</string>
-    <string name="homepage_url">https://dullbluelab.nobushi.jp/index.html</string>
+    <string name="homepage_url">https://www.facebook.com/profile.php?id=61572438149103</string>
     <string name="item_year_picker">検索する年を選択</string>
+    <string name="text_update_data">気象データを更新します</string>
+    <string name="text_startup">初期設定をします</string>
+    <string name="text_collect_data">気象データを集計しています</string>
+    <string name="text_add_download">追加データをダウンロードします</string>
+    <string name="text_high_temp">High temp</string>
+    <string name="text_high_record">最高記録</string>
+    <string name="text_low_record">最低記録</string>
+    <string name="tag_peak">Peak</string>
+    <string name="text_recent_temp">直近20年の平均気温</string>
+    <string name="text_low_temp">Low temp</string>
+    <string name="text_sunny_count">直近20年の晴れのある日</string>
+    <string name="text_rainy_count">直近20年の雨のある日</string>
+    <string name="text_clear_skies_count">直近20年の快晴の日</string>
+    <string name="name_info">Info</string>
+    <string name="name_tool">Tool</string>
+    <string name="text_clear_data">データと設定をクリアします</string>
+    <string name="name_clear">Clear</string>
+    <string name="text_success_reset">データの初期化に成功しました</string>
 </resources>

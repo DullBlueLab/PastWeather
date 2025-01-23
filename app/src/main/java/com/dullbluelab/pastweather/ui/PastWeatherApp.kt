@@ -1,19 +1,16 @@
 package com.dullbluelab.pastweather.ui
 
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -21,14 +18,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
@@ -38,16 +35,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.dullbluelab.pastweather.MainActivity
 import com.dullbluelab.pastweather.R
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
 
 enum class PastWeatherScreen {
-    Weather, Info, Location, Download
+    Weather, Aside, Location
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun PastWeatherApp(
     activity: MainActivity,
@@ -56,10 +50,11 @@ fun PastWeatherApp(
 ) {
     val navController: NavHostController = rememberNavController()
     val state by viewModel.routeUi.collectAsState()
-    val context = LocalContext.current
+    val windowSizeClass = calculateWindowSizeClass(activity = activity)
+    val textClearData = stringResource(id = R.string.text_success_reset)
 
     if (activity.destinationListener == null) {
-        activity.destinationListener = DestinationListener(context, viewModel)
+        activity.destinationListener = DestinationListener(viewModel)
         navController.addOnDestinationChangedListener(activity.destinationListener!!)
     }
 
@@ -72,7 +67,7 @@ fun PastWeatherApp(
                     navController.navigateUp()
                 },
                 onInfoButtonClicked = {
-                    navController.navigate(PastWeatherScreen.Info.name)
+                    navController.navigate(PastWeatherScreen.Aside.name)
                 },
             )
         }
@@ -90,43 +85,44 @@ fun PastWeatherApp(
                     .fillMaxWidth()
             ) {
                 composable(route = PastWeatherScreen.Weather.name) {
-                    WeatherScreen(
-                        onChangeYear = { value -> viewModel.changeYear(value) },
-                        onLocation = {
-                            navController.navigate(PastWeatherScreen.Location.name)
-                        },
-                        viewModel = viewModel,
-                    )
+                    when (windowSizeClass.widthSizeClass) {
+                        WindowWidthSizeClass.Expanded -> {
+                            WeatherWideScreen(
+                                onChangeYear = { value -> viewModel.changeYear(value) },
+                                onLocation = {
+                                    navController.navigate(PastWeatherScreen.Location.name)
+                                },
+                                viewModel = viewModel,
+                            )
+                        }
+                        else -> {
+                            WeatherScreen(
+                                onChangeYear = { value -> viewModel.changeYear(value) },
+                                onLocation = {
+                                    navController.navigate(PastWeatherScreen.Location.name)
+                                },
+                                viewModel = viewModel,
+                            )
+                        }
+                    }
                 }
                 composable(route = PastWeatherScreen.Location.name) {
                     LocationScreen(
-                        showDownload = {
-                            val route = PastWeatherScreen.Download.name
-                            navController.navigate(route)
-                        },
+                        selectLocation = { code -> viewModel.changeLocation(code) },
                         viewModel = viewModel
                     )
                 }
-                composable(route = PastWeatherScreen.Info.name) {
+                composable(route = PastWeatherScreen.Aside.name) {
                     InfoScreen(
-                        openHomepage = openHomepage
+                        openHomepage = openHomepage,
+                        resetData = { viewModel.resetData { message ->
+                            if (message == "success") {
+                                Toast.makeText(activity, textClearData, Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        } }
                     )
                 }
-                composable(route = PastWeatherScreen.Download.name) {
-                    DownloadScreen(
-                        finish = { navController.navigateUp() },
-                        viewModel = viewModel
-                    )
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .height(64.dp)
-                    .fillMaxWidth()
-            ) {
-                AdmobBanner(
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
         }
     }
@@ -141,8 +137,7 @@ fun PastWeatherTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     navigateUp: () -> Unit = {},
     onInfoButtonClicked: () -> Unit
-)
-{
+) {
     val title = when(currentScreen) {
         PastWeatherScreen.Weather.name -> stringResource(id = R.string.app_name)
         else -> currentScreen
@@ -170,7 +165,7 @@ fun PastWeatherTopAppBar(
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Info,
+                        imageVector = Icons.Filled.Menu,
                         contentDescription = stringResource(id = R.string.button_info)
                     )
                 }
@@ -180,7 +175,6 @@ fun PastWeatherTopAppBar(
 }
 
 class DestinationListener(
-    private val context: Context,
     private val viewModel: PastWeatherViewModel
 )
     : NavController.OnDestinationChangedListener {
@@ -191,36 +185,6 @@ class DestinationListener(
         arguments: Bundle?
     ) {
         val route = destination.route ?: "Weather"
-        val prev = viewModel.routeUi.value.route
-        val now = viewModel.downloadUi.value.status
-
-        if (prev == "Download" && route != "Download" && now == "download") {
-            viewModel.checkAndCancelDownload()
-            Toast.makeText(context, R.string.text_cancel_download, Toast.LENGTH_SHORT)
-                .show()
-        }
         viewModel.updateRoute(route)
     }
-}
-
-@Composable
-fun  AdmobBanner(
-    modifier: Modifier = Modifier
-) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            AdView(context).apply {
-                // 下の行で広告ビューを指定します。広告サイズ
-                //adSize = AdSize.BANNER
-                // 下の行で広告ユニット ID を指定
-                // 現在追加されているテスト広告ユニット ID。
-                setAdSize(AdSize.BANNER)
-                // adUnitId = "ca-app-pub-3940256099942544/9214589741" // test
-                adUnitId = "ca-app-pub-5155739412996974/5785915157"
-                // 呼び出し広告を読み込んで広告を読み込みます。
-                loadAd(AdRequest.Builder().build())
-            }
-        }
-    )
 }

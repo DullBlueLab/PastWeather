@@ -29,6 +29,24 @@
     <string name="text_ask_download_r">" data?"</string>
     <string name="button_info">Info</string>
     <string name="error_browse">not connect internet</string>
-    <string name="homepage_url">https://dullbluelab.nobushi.jp/index.html</string>
+    <string name="homepage_url">https://www.facebook.com/profile.php?id=61572438149103</string>
     <string name="item_year_picker">Number picker of year</string>
+    <string name="text_update_data">Updating weather data</string>
+    <string name="text_startup">Setting initial data</string>
+    <string name="text_collect_data">Collecting weather data</string>
+    <string name="text_add_download">Download additional weather data</string>
+    <string name="text_high_temp">High temp</string>
+    <string name="text_high_record">High record</string>
+    <string name="text_low_temp">Low temp</string>
+    <string name="text_low_record">Low record</string>
+    <string name="tag_peak">Peak</string>
+    <string name="text_recent_temp">Average temperature for the last 20 years</string>
+    <string name="text_sunny_count">Sunny in the last 20 years</string>
+    <string name="text_rainy_count">Rainy in the last 20 years</string>
+    <string name="text_clear_skies_count">clear skies in the last 20 years</string>
+    <string name="name_info">Info</string>
+    <string name="name_tool">Tool</string>
+    <string name="text_clear_data">Clear data and settings</string>
+    <string name="name_clear">Clear</string>
+    <string name="text_success_reset">Data initialization succeeded</string>
 </resources>

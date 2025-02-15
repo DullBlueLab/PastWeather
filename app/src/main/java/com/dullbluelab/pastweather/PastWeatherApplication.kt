@@ -5,7 +5,6 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
-import com.dullbluelab.pastweather.data.OfflineWeatherRepository
 import com.dullbluelab.pastweather.data.WeatherRepository
 import com.dullbluelab.pastweather.data.UserPreferencesRepository
 import com.dullbluelab.pastweather.data.WeatherDatabase
@@ -32,6 +31,6 @@ interface AppContainer {
 class AppDataContainer(private val context: Context) : AppContainer {
     override val weatherRepository: WeatherRepository by lazy {
         val database = WeatherDatabase.getDatabase(context)
-        OfflineWeatherRepository(database)
+        WeatherRepository(database, context)
     }
 }
